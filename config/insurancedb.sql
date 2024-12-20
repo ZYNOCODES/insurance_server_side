@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 20, 2024 at 11:45 PM
+-- Generation Time: Dec 21, 2024 at 12:27 AM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 8.1.10
 
@@ -94,6 +94,18 @@ CREATE TABLE `document` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `grade`
+--
+
+CREATE TABLE `grade` (
+  `id` int(11) NOT NULL,
+  `name` varchar(55) NOT NULL,
+  `exclusions` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `insurer`
 --
 
@@ -127,7 +139,7 @@ CREATE TABLE `justification` (
 CREATE TABLE `medicalservice` (
   `id` int(11) NOT NULL,
   `user` int(11) NOT NULL,
-  `type` enum('doctor','pharmacy','organisation') NOT NULL,
+  `type` enum('doctor','pharmacy','organisation') NOT NULL DEFAULT 'organisation',
   `location` varchar(255) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -244,12 +256,19 @@ ALTER TABLE `document`
   ADD KEY `idx_document_claim` (`claim`);
 
 --
+-- Indexes for table `grade`
+--
+ALTER TABLE `grade`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `insurer`
 --
 ALTER TABLE `insurer`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_insurer_user` (`user`),
-  ADD KEY `idx_insurer_region` (`region`);
+  ADD KEY `idx_insurer_region` (`region`),
+  ADD KEY `idx_insurer_grade` (`grade`);
 
 --
 -- Indexes for table `justification`
@@ -328,6 +347,12 @@ ALTER TABLE `client`
 -- AUTO_INCREMENT for table `document`
 --
 ALTER TABLE `document`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `grade`
+--
+ALTER TABLE `grade`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -419,6 +444,7 @@ ALTER TABLE `document`
 -- Constraints for table `insurer`
 --
 ALTER TABLE `insurer`
+  ADD CONSTRAINT `fk_insurer_grade` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_insurer_region` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_insurer_user` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
