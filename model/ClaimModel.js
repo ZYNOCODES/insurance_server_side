@@ -62,6 +62,12 @@ const Claim = sequelize.define('claim', {
             key: 'id',
         },
     },
+    date: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        required: true,
+        defaultValue: DataTypes.NOW,
+    },
 }, {
     freezeTableName: true,
     timestamps: false,

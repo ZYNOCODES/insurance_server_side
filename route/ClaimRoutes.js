@@ -14,6 +14,7 @@ const {
     rejectClaimByInsurer,
     addPaymentToClaimByInsurer,
     confirmPaymentByClient,
+    getClientClaimStatistics
 } = require('../controller/ClaimController.js');
 const limiter = require('../middleware/RateLimiting.js');
 const checkAuthentification = require('../middleware/RequireAuth.js');
@@ -38,6 +39,8 @@ router.get('/client/all/:id', checkAuthrozation([process.env.CLIENT_TYPE]), chec
 router.get('/client/archived/:id', checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, getAllArchivedClaimsByClient);
 //Confirm payment by client
 router.post('/client/confirm/:id', limiter, checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, confirmPaymentByClient);
+//Get client claim statistics
+router.get('/client/statistics/:id', checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, getClientClaimStatistics);
 
 //INSURER ROUTES
 //Get all pending claims

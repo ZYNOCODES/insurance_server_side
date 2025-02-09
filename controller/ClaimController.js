@@ -199,11 +199,34 @@ const getAllClaimsByClient = asyncErrorHandler(async (req, res, next) => {
     if (!claims || claims.length <= 0) {
         return next(new CustomError('No claims found', 404));
     }
-    //send response
-    res.status(200).json({
-        success: true,
-        data: claims,
+    // Filter claims with status "paid"
+    const paidClaims = claims.filter((claim) => claim.status === 'paid');
+    
+    // Fetch payments for all "paid" claims in a single query
+    const payments = await Payment.findAll({
+        where: {
+            claim: paidClaims.map((claim) => claim.id),
+        },
     });
+
+    // Map payments to their respective claims
+    const paymentMap = payments.reduce((map, payment) => {
+        if (!map[payment.claim]) {
+            map[payment.claim] = 0;
+        }
+        map[payment.claim] += parseFloat(payment.amount);
+        return map;
+    }, {});
+
+    // Add reimbursement amount to paid claims
+    const updatedClaims = claims.map((claim) => {
+        if (claim.status === 'paid') {
+            claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
+        }
+        return claim;
+    });    
+    //send response
+    res.status(200).json(updatedClaims);
 });
 // Get all archived claims by client
 const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) => {
@@ -248,11 +271,35 @@ const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) =>
     if (!claims || claims.length <= 0) {
         return next(new CustomError('No claims found', 404));
     }
-    //send response
-    res.status(200).json({
-        success: true,
-        data: claims,
+    // Filter claims with status "paid"
+    const paidClaims = claims.filter((claim) => claim.status === 'paid');
+
+    // Fetch payments for all "paid" claims in a single query
+    const payments = await Payment.findAll({
+        where: {
+            claim: paidClaims.map((claim) => claim.id),
+        },
     });
+
+    // Map payments to their respective claims
+    const paymentMap = payments.reduce((map, payment) => {
+        if (!map[payment.claim]) {
+            map[payment.claim] = 0;
+        }
+        map[payment.claim] += parseFloat(payment.amount);
+        return map;
+    }, {});
+
+    // Add reimbursement amount to paid claims
+    const updatedClaims = claims.map((claim) => {
+        if (claim.status === 'paid') {
+            claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
+        }
+        return claim;
+    });
+
+    //send response
+    res.status(200).json(updatedClaims);
 }); 
 // Get all pending claims
 const getAllPendingClaims = asyncErrorHandler(async (req, res, next) => {
@@ -295,10 +342,7 @@ const getAllPendingClaims = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('No claims found', 404));
     }
     //send response
-    res.status(200).json({
-        success: true,
-        data: claims,
-    });
+    res.status(200).json(claims);
 });
 // Get all approved claims
 const getAllApprovedClaims = asyncErrorHandler(async (req, res, next) => {
@@ -342,10 +386,7 @@ const getAllApprovedClaims = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('No claims found', 404));
     }
     //send response
-    res.status(200).json({
-        success: true,
-        data: claims,
-    });
+    res.status(200).json(claims);
 });
 // Get all paid claims
 const getAllPaidClaims = asyncErrorHandler(async (req, res, next) => {
@@ -388,11 +429,35 @@ const getAllPaidClaims = asyncErrorHandler(async (req, res, next) => {
     if (!claims || claims.length <= 0) {
         return next(new CustomError('No claims found', 404));
     }
-    //send response
-    res.status(200).json({
-        success: true,
-        data: claims,
+    // Filter claims with status "paid"
+    const paidClaims = claims.filter((claim) => claim.status === 'paid');
+
+    // Fetch payments for all "paid" claims in a single query
+    const payments = await Payment.findAll({
+        where: {
+            claim: paidClaims.map((claim) => claim.id),
+        },
     });
+
+    // Map payments to their respective claims
+    const paymentMap = payments.reduce((map, payment) => {
+        if (!map[payment.claim]) {
+            map[payment.claim] = 0;
+        }
+        map[payment.claim] += parseFloat(payment.amount);
+        return map;
+    }, {});
+
+    // Add reimbursement amount to paid claims
+    const updatedClaims = claims.map((claim) => {
+        if (claim.status === 'paid') {
+            claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
+        }
+        return claim;
+    });
+
+    //send response
+    res.status(200).json(updatedClaims);
 });
 // Get all rejected claims
 const getAllRejectedClaims = asyncErrorHandler(async (req, res, next) => {
@@ -436,10 +501,7 @@ const getAllRejectedClaims = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('No claims found', 404));
     }
     //send response
-    res.status(200).json({
-        success: true,
-        data: claims,
-    });
+    res.status(200).json(claims);
 });
 // take a claim by insurer
 const takeClaimByInsurer = asyncErrorHandler(async (req, res, next) => {
@@ -718,6 +780,82 @@ const confirmPaymentByClient = asyncErrorHandler(async (req, res, next) => {
         next(new CustomError('An error occurred while confirming the payment', 500));
     }
 });
+//client statistics
+const getClientClaimStatistics = asyncErrorHandler(async (req, res, next) => {
+    const { id } = req.params;
+    //get all claims
+    const claims = await Claim.findAll({
+        where: {
+            client: id,
+        },
+    });
+    //check if claims were found
+    if (!claims || claims.length <= 0) {
+        return next(new CustomError('No claims found', 404));
+    }
+    // Filter claims with status "paid"
+    const paidClaims = claims.filter((claim) => claim.status === 'paid');
+
+    // Fetch payments for all "paid" claims in a single query
+    const payments = await Payment.findAll({
+        where: {
+            claim: paidClaims.map((claim) => claim.id),
+        },
+    });
+
+    // Map payments to their respective claims
+    const paymentMap = payments.reduce((map, payment) => {
+        if (!map[payment.claim]) {
+            map[payment.claim] = 0;
+        }
+        map[payment.claim] += parseFloat(payment.amount);
+        return map;
+    }, {});
+
+    // Add reimbursement amount to paid claims
+    const updatedClaims = claims.map((claim) => {
+        if (claim.status === 'paid') {
+            claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
+        }
+        return claim;
+    });
+
+    //calcuate statistics
+    // Total number of claims
+    const totalClaims = claims.length;
+    // Total number of claims paid
+    const totalPaidClaims = paidClaims.length;
+    // Total number of claims rejected
+    const totalRejectedClaims = claims.filter((claim) => claim.status === 'rejected').length;
+    // Total number of claims pending
+    const totalPendingClaims = claims.filter((claim) => claim.status === 'pending').length;
+    // Total number of claims approved
+    const totalApprovedClaims = claims.filter((claim) => claim.status === 'approved').length;
+    // Total amount of claims 
+    const totalClaimAmount = claims.reduce((sum, claim) => sum + parseFloat(claim.claim_amount), 0);
+    // Total amount of claims approved and waiting for payment
+    const ApprovedReimbursement = claims.filter((claim) => claim.status === 'approved');
+    const totalApprovedReimbursementAmount = ApprovedReimbursement.reduce((sum, claim) => sum + parseFloat(claim.claim_amount), 0);
+    // Total amount of claims paid and not closed
+    const nonvalidatedPayments = payments.filter((payment) => payment.validation === false);
+    const totalnonvalidatedReimbursement = nonvalidatedPayments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    // Total validated payment of claims paid and not closed
+    const validatedPayments = payments.filter((payment) => payment.validation === true);
+    const totalvalidatedReimbursement = validatedPayments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+
+    //send response
+    res.status(200).json({
+        totalClaims,
+        totalClaimAmount,
+        totalPaidClaims,
+        totalRejectedClaims,
+        totalPendingClaims,
+        totalApprovedClaims,
+        totalApprovedReimbursementAmount,
+        totalnonvalidatedReimbursement,
+        totalvalidatedReimbursement,
+    });
+});
 
 module.exports = {
     createNewClaim,
@@ -733,4 +871,5 @@ module.exports = {
     rejectClaimByInsurer,
     addPaymentToClaimByInsurer,
     confirmPaymentByClient,
+    getClientClaimStatistics
 }
