@@ -11,6 +11,7 @@ const removeSpacesMiddleware = require('./middleware/RemoveSpacesMiddleware.js')
 
 //routes
 const AuthRoutes = require('./route/AuthRoutes');
+const ClaimRoutes = require('./route/ClaimRoutes.js');
 
 //http server
 const http = require('http');
@@ -33,6 +34,7 @@ app.use(removeSpacesMiddleware);
 
 //routes
 app.use('/api/auth', AuthRoutes);
+app.use('/api/claim', ClaimRoutes);
 
 //error handling
 app.use(ErrorHandler);
@@ -46,7 +48,7 @@ app.get("*", (req, res) => {
 // Disable logging of SQL queries
 sequelize.options.logging = false;
 //connect to db
-sequelize.sync().then(() => {
+sequelize.sync({ alter: true }).then(() => {
     server.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });

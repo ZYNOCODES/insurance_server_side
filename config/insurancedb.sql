@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.0
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 21, 2024 at 12:27 AM
--- Server version: 10.4.25-MariaDB
--- PHP Version: 8.1.10
+-- Generation Time: Feb 09, 2025 at 04:22 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -21,6 +21,26 @@ SET time_zone = "+00:00";
 -- Database: `insurancedb`
 --
 
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `DropPhoneIndexes` ()   BEGIN
+    DECLARE i INT DEFAULT 14;
+    DECLARE index_name VARCHAR(50);
+
+    WHILE i <= 21 DO
+        SET index_name = CONCAT('phone_', i);
+        SET @sql = CONCAT('ALTER TABLE `user` DROP INDEX `', index_name, '`');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+        SET i = i + 1;
+    END WHILE;
+END$$
+
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -33,7 +53,7 @@ CREATE TABLE `accusation` (
   `description` int(11) NOT NULL,
   `status` enum('approved','rejected','pending') NOT NULL DEFAULT 'pending',
   `date` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -44,7 +64,14 @@ CREATE TABLE `accusation` (
 CREATE TABLE `admin` (
   `id` int(11) NOT NULL,
   `user` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admin`
+--
+
+INSERT INTO `admin` (`id`, `user`) VALUES
+(1, 1);
 
 -- --------------------------------------------------------
 
@@ -57,11 +84,18 @@ CREATE TABLE `claim` (
   `client` int(11) NOT NULL,
   `medicalservice` int(11) NOT NULL,
   `insurer` int(11) DEFAULT NULL,
-  `policy` int(11) DEFAULT NULL,
-  `status` enum('pending','approved','rejected','paid') NOT NULL DEFAULT 'pending',
-  `closed` tinyint(1) NOT NULL DEFAULT 0,
-  `claim_amount` varchar(55) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `status` enum('pending','approved','rejected','paid') DEFAULT 'pending',
+  `closed` tinyint(1) DEFAULT 0,
+  `claim_amount` varchar(255) NOT NULL,
+  `region` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `claim`
+--
+
+INSERT INTO `claim` (`id`, `client`, `medicalservice`, `insurer`, `status`, `closed`, `claim_amount`, `region`) VALUES
+(1, 1, 1, NULL, 'pending', 0, '5000', 2);
 
 -- --------------------------------------------------------
 
@@ -72,11 +106,20 @@ CREATE TABLE `claim` (
 CREATE TABLE `client` (
   `id` int(11) NOT NULL,
   `user` int(11) NOT NULL,
-  `age` varchar(55) NOT NULL,
+  `age` varchar(255) NOT NULL,
   `address` varchar(255) NOT NULL,
-  `job` varchar(55) NOT NULL,
-  `married` tinyint(1) NOT NULL DEFAULT 0
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `job` varchar(255) NOT NULL,
+  `married` tinyint(1) DEFAULT 0,
+  `policy` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `client`
+--
+
+INSERT INTO `client` (`id`, `user`, `age`, `address`, `job`, `married`, `policy`) VALUES
+(1, 4, '22', 'Quartier DJR N3', 'student', 0, 1),
+(2, 5, '22', 'Quartier Birkhadem N42', 'student', 0, 2);
 
 -- --------------------------------------------------------
 
@@ -89,7 +132,7 @@ CREATE TABLE `document` (
   `claim` int(11) NOT NULL,
   `name` varchar(55) NOT NULL,
   `date` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -99,9 +142,17 @@ CREATE TABLE `document` (
 
 CREATE TABLE `grade` (
   `id` int(11) NOT NULL,
-  `name` varchar(55) NOT NULL,
+  `name` varchar(255) NOT NULL,
   `exclusions` text NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `grade`
+--
+
+INSERT INTO `grade` (`id`, `name`, `exclusions`) VALUES
+(1, 'A', 'confidential'),
+(2, 'B', 'basic');
 
 -- --------------------------------------------------------
 
@@ -112,9 +163,16 @@ CREATE TABLE `grade` (
 CREATE TABLE `insurer` (
   `id` int(11) NOT NULL,
   `user` int(11) NOT NULL,
-  `grade` int(11) NOT NULL,
-  `region` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `grade` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `insurer`
+--
+
+INSERT INTO `insurer` (`id`, `user`, `grade`) VALUES
+(1, 2, 1),
+(2, 3, 2);
 
 -- --------------------------------------------------------
 
@@ -127,8 +185,10 @@ CREATE TABLE `justification` (
   `claim` int(11) NOT NULL,
   `description` text NOT NULL,
   `accused` tinyint(1) NOT NULL DEFAULT 0,
-  `date` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `date` datetime NOT NULL,
+  `region` int(11) DEFAULT NULL,
+  `grade` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -141,7 +201,16 @@ CREATE TABLE `medicalservice` (
   `user` int(11) NOT NULL,
   `type` enum('doctor','pharmacy','organisation') NOT NULL DEFAULT 'organisation',
   `location` varchar(255) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `medicalservice`
+--
+
+INSERT INTO `medicalservice` (`id`, `user`, `type`, `location`) VALUES
+(1, 6, 'doctor', 'Ouled aiche N43'),
+(2, 7, 'pharmacy', 'Rue d\'alger N43'),
+(3, 8, 'organisation', 'Rue d\'alger N43');
 
 -- --------------------------------------------------------
 
@@ -156,7 +225,7 @@ CREATE TABLE `observation` (
   `description` text NOT NULL,
   `payment` varchar(55) NOT NULL,
   `date` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -167,10 +236,10 @@ CREATE TABLE `observation` (
 CREATE TABLE `payment` (
   `id` int(11) NOT NULL,
   `claim` int(11) NOT NULL,
-  `amount` varchar(55) NOT NULL,
-  `validation` tinyint(1) NOT NULL DEFAULT 0,
-  `date` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `amount` varchar(255) NOT NULL,
+  `validation` tinyint(1) DEFAULT 0,
+  `date` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -180,13 +249,21 @@ CREATE TABLE `payment` (
 
 CREATE TABLE `policy` (
   `id` int(11) NOT NULL,
-  `name` varchar(55) NOT NULL,
-  `limit` decimal(10,2) NOT NULL,
-  `co_pay` decimal(5,2) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `limit` decimal(10,0) NOT NULL,
+  `co_pay` decimal(10,0) NOT NULL,
   `exclusions` text NOT NULL,
-  `timeframe` int(55) NOT NULL,
-  `date` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `date` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `policy`
+--
+
+INSERT INTO `policy` (`id`, `name`, `limit`, `co_pay`, `exclusions`, `date`) VALUES
+(1, 'Basic Health Insurance Plan', 15000, 20, 'Prescription medication', '2025-02-09 02:36:36'),
+(2, 'Premium Health Insurance Plan', 50000, 10, 'Experimental treatments, prescription medication, non-prescription medication', '2025-02-09 02:37:21'),
+(3, 'Family Plan', 100000, 20, 'Experimental treatments, non-prescription medication.', '2025-02-09 02:39:46');
 
 -- --------------------------------------------------------
 
@@ -196,8 +273,17 @@ CREATE TABLE `policy` (
 
 CREATE TABLE `region` (
   `id` int(11) NOT NULL,
-  `name` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `region`
+--
+
+INSERT INTO `region` (`id`, `name`) VALUES
+(1, 'Alger'),
+(2, 'Blida'),
+(3, 'Medea');
 
 -- --------------------------------------------------------
 
@@ -207,11 +293,26 @@ CREATE TABLE `region` (
 
 CREATE TABLE `user` (
   `id` int(11) NOT NULL,
-  `username` varchar(55) NOT NULL,
+  `username` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
-  `phone` varchar(55) NOT NULL,
-  `fullname` varchar(55) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `phone` varchar(255) NOT NULL,
+  `fullname` varchar(255) NOT NULL,
+  `region` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `user`
+--
+
+INSERT INTO `user` (`id`, `username`, `password`, `phone`, `fullname`, `region`) VALUES
+(1, 'zynocodes', '$2b$10$4MIvpragNPncW.6UO6nCaeznNlAunQcUFhFv0PyFzJ8laokidy/FW', '0778295266', 'Zineeddine Boumrar', 3),
+(2, 'codebykhaldi', '$2b$10$yf.6JL2zSmasbEwf4bQHt.O46/9GiH0tjsxnkIyx07tD1BOlUvGW2', '0563825360', 'Abdelmoumen Khaldi', 1),
+(3, 'yassine2003', '$2b$10$E9iEjEoy48lN8uo98TH39uCdj0FKPdwmHwegq89G42vh60PyluMMu', '0643187659', 'Yassine Hakem', 2),
+(4, 'hind22', '$2b$10$ToSTeeuVIJp7URFSXzWDJeumMGAb3lNxymV.pYDtHw3tI3aSIUgua', '0756321198', 'Benkssiour Hind', 2),
+(5, 'amira22', '$2b$10$HJODWEHAyNFSLJdO7NAJOO1MajgYOdUR19mEFJjg483hi9TYXFO4G', '0543678294', 'Said Abdessameud Amira', 1),
+(6, 'Dryassine22', '$2b$10$CTsz793H7OasrTbZIBdT9e9/Syh17tj0xtNAVJE4DwhBYhF9S17.i', '0765342984', 'Dr Yassine Hakem', 2),
+(7, 'Drloukmane23', '$2b$10$haBVlYFlXA486/.NC8YK0uv2/Q4KtZNu5aAIsrFm39wA/vUZTlDeS', '0564328734', 'Dr Loukmane Nouar', 3),
+(8, 'hopitalA1', '$2b$10$eY.J3tqW/YJjuLf2l1fiBOAhkScRUcbjhrJYPJsSCbuRwjZrPo6z6', '0654382976', 'Hopital A', 1);
 
 --
 -- Indexes for dumped tables
@@ -239,14 +340,15 @@ ALTER TABLE `claim`
   ADD KEY `idx_claim_client` (`client`),
   ADD KEY `idx_claim_insurer` (`insurer`),
   ADD KEY `idx_claim_medicalservice` (`medicalservice`),
-  ADD KEY `idx_claim_policy` (`policy`);
+  ADD KEY `idx_claim_region` (`region`);
 
 --
 -- Indexes for table `client`
 --
 ALTER TABLE `client`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_client_user` (`user`);
+  ADD KEY `idx_client_user` (`user`),
+  ADD KEY `policy` (`policy`);
 
 --
 -- Indexes for table `document`
@@ -267,7 +369,6 @@ ALTER TABLE `grade`
 ALTER TABLE `insurer`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_insurer_user` (`user`),
-  ADD KEY `idx_insurer_region` (`region`),
   ADD KEY `idx_insurer_grade` (`grade`);
 
 --
@@ -275,7 +376,9 @@ ALTER TABLE `insurer`
 --
 ALTER TABLE `justification`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_justification_claim` (`claim`);
+  ADD KEY `idx_justification_claim` (`claim`),
+  ADD KEY `region` (`region`),
+  ADD KEY `grade` (`grade`);
 
 --
 -- Indexes for table `medicalservice`
@@ -313,7 +416,11 @@ ALTER TABLE `region`
 -- Indexes for table `user`
 --
 ALTER TABLE `user`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`),
+  ADD UNIQUE KEY `password` (`password`),
+  ADD UNIQUE KEY `phone` (`phone`),
+  ADD KEY `idx_user_region` (`region`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -329,19 +436,19 @@ ALTER TABLE `accusation`
 -- AUTO_INCREMENT for table `admin`
 --
 ALTER TABLE `admin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `claim`
 --
 ALTER TABLE `claim`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `client`
 --
 ALTER TABLE `client`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `document`
@@ -353,13 +460,13 @@ ALTER TABLE `document`
 -- AUTO_INCREMENT for table `grade`
 --
 ALTER TABLE `grade`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `insurer`
 --
 ALTER TABLE `insurer`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `justification`
@@ -371,7 +478,7 @@ ALTER TABLE `justification`
 -- AUTO_INCREMENT for table `medicalservice`
 --
 ALTER TABLE `medicalservice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `observation`
@@ -389,19 +496,19 @@ ALTER TABLE `payment`
 -- AUTO_INCREMENT for table `policy`
 --
 ALTER TABLE `policy`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `region`
 --
 ALTER TABLE `region`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- Constraints for dumped tables
@@ -417,22 +524,23 @@ ALTER TABLE `accusation`
 -- Constraints for table `admin`
 --
 ALTER TABLE `admin`
-  ADD CONSTRAINT `fk_admin_user` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `admin_ibfk_1` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `claim`
 --
 ALTER TABLE `claim`
-  ADD CONSTRAINT `fk_claim_client` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_claim_insurer` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_claim_medicalservice` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_claim_policy` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `claim_ibfk_93` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_94` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_95` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_96` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `client`
 --
 ALTER TABLE `client`
-  ADD CONSTRAINT `fk_client_user` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `client_ibfk_263` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `client_ibfk_264` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document`
@@ -444,27 +552,35 @@ ALTER TABLE `document`
 -- Constraints for table `insurer`
 --
 ALTER TABLE `insurer`
-  ADD CONSTRAINT `fk_insurer_grade` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_insurer_region` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `fk_insurer_user` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `insurer_ibfk_25` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `insurer_ibfk_26` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `justification`
 --
 ALTER TABLE `justification`
-  ADD CONSTRAINT `fk_justification_claim` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `justification_ibfk_61` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `justification_ibfk_62` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `justification_ibfk_63` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `medicalservice`
 --
 ALTER TABLE `medicalservice`
-  ADD CONSTRAINT `fk_medicalservice_user` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `medicalservice_ibfk_1` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `payment`
 --
 ALTER TABLE `payment`
-  ADD CONSTRAINT `fk_payment_claim` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `payment_ibfk_1` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+
+--
+-- Constraints for table `user`
+--
+ALTER TABLE `user`
+  ADD CONSTRAINT `user_ibfk_1` FOREIGN KEY (`region`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `user_ibfk_2` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

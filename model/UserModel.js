@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
+const Region = require('./RegionModel');
 
 const User = sequelize.define('user', {
     id: {
@@ -11,28 +12,37 @@ const User = sequelize.define('user', {
         type: DataTypes.STRING,
         allowNull: false,
         required: true,
-        unique: true,
     },
     password: {
         type: DataTypes.STRING,
         allowNull: false,
         required: true,
-        unique: true,
     },
     phone: {
         type: DataTypes.STRING,
         allowNull: false,
         required: true,
-        unique: true,
     },
     fullname: {
         type: DataTypes.STRING,
         allowNull: false,
         required: true,
     },
+    region: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        required: true,
+        references: {
+            model: Region,
+            key: 'id',
+        },
+    },
 }, {
     freezeTableName: true,
     timestamps: false,
 });
+
+User.belongsTo(Region, { foreignKey: 'region', as: 'regionAssociation' });
+
 
 module.exports = User;

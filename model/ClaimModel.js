@@ -3,7 +3,7 @@ const sequelize = require('../config/Database');
 const Client = require('./ClientModel');
 const MedicalService = require('./MedicalServiceModel');
 const Insurer = require('./InsurerModel');
-const Policy = require('./PolicyModel');
+const Region = require('./RegionModel');
 
 const Claim = sequelize.define('claim', {
     id: {
@@ -31,18 +31,10 @@ const Claim = sequelize.define('claim', {
     },
     insurer: {
         type: DataTypes.INTEGER,
+        defaultValue: null,
         allowNull: true,
         references: {
             model: Insurer,
-            key: 'id',
-        },
-    },
-    policy: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        required: true,
-        references: {
-            model: Policy,
             key: 'id',
         },
     },
@@ -61,6 +53,15 @@ const Claim = sequelize.define('claim', {
         allowNull: false,
         required: true,
     },
+    region: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        required: true,
+        references: {
+            model: Region,
+            key: 'id',
+        },
+    },
 }, {
     freezeTableName: true,
     timestamps: false,
@@ -69,6 +70,6 @@ const Claim = sequelize.define('claim', {
 Claim.belongsTo(Client, { foreignKey: 'client', as: 'clientAssociation' });
 Claim.belongsTo(MedicalService, { foreignKey: 'medicalservice', as: 'medicalServiceAssociation' });
 Claim.belongsTo(Insurer, { foreignKey: 'insurer', as: 'insurerAssociation' });
-Claim.belongsTo(Policy, { foreignKey: 'policy', as: 'policyAssociation' });
+Claim.belongsTo(Region, { foreignKey: 'region', as: 'regionAssociation' });
 
 module.exports = Claim;
