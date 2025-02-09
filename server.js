@@ -12,6 +12,12 @@ const removeSpacesMiddleware = require('./middleware/RemoveSpacesMiddleware.js')
 //routes
 const AuthRoutes = require('./route/AuthRoutes');
 const ClaimRoutes = require('./route/ClaimRoutes.js');
+const GradeRoutes = require('./route/GradeRoutes.js');
+const PolicyRoutes = require('./route/PolicyRoutes.js');
+const RegionRoutes = require('./route/RegionRoutes.js');
+const MedicalServiceRoutes = require('./route/MedicalServiceRoutes.js');
+
+
 
 //http server
 const http = require('http');
@@ -35,6 +41,10 @@ app.use(removeSpacesMiddleware);
 //routes
 app.use('/api/auth', AuthRoutes);
 app.use('/api/claim', ClaimRoutes);
+app.use('/api/grade', GradeRoutes);
+app.use('/api/policy', PolicyRoutes);
+app.use('/api/region', RegionRoutes);
+app.use('/api/medicalservice', MedicalServiceRoutes);
 
 //error handling
 app.use(ErrorHandler);

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 09, 2025 at 04:22 AM
+-- Generation Time: Feb 09, 2025 at 05:09 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -95,7 +95,11 @@ CREATE TABLE `claim` (
 --
 
 INSERT INTO `claim` (`id`, `client`, `medicalservice`, `insurer`, `status`, `closed`, `claim_amount`, `region`) VALUES
-(1, 1, 1, NULL, 'pending', 0, '5000', 2);
+(1, 1, 1, 1, 'paid', 0, '5000', 2),
+(3, 1, 1, 2, 'rejected', 1, '10000', 2),
+(4, 4, 1, NULL, 'pending', 0, '100', 2),
+(5, 4, 2, NULL, 'pending', 0, '1000', 3),
+(6, 4, 3, NULL, 'pending', 0, '20000', 1);
 
 -- --------------------------------------------------------
 
@@ -119,7 +123,8 @@ CREATE TABLE `client` (
 
 INSERT INTO `client` (`id`, `user`, `age`, `address`, `job`, `married`, `policy`) VALUES
 (1, 4, '22', 'Quartier DJR N3', 'student', 0, 1),
-(2, 5, '22', 'Quartier Birkhadem N42', 'student', 0, 2);
+(2, 5, '22', 'Quartier Birkhadem N42', 'student', 0, 2),
+(4, 9, '31', 'gjhdhc', 'bhcfj', 1, 3);
 
 -- --------------------------------------------------------
 
@@ -143,7 +148,7 @@ CREATE TABLE `document` (
 CREATE TABLE `grade` (
   `id` int(11) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `exclusions` text NOT NULL
+  `exclusions` enum('secure','confidential','unclassified') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -152,7 +157,7 @@ CREATE TABLE `grade` (
 
 INSERT INTO `grade` (`id`, `name`, `exclusions`) VALUES
 (1, 'A', 'confidential'),
-(2, 'B', 'basic');
+(2, 'B', 'unclassified');
 
 -- --------------------------------------------------------
 
@@ -185,10 +190,15 @@ CREATE TABLE `justification` (
   `claim` int(11) NOT NULL,
   `description` text NOT NULL,
   `accused` tinyint(1) NOT NULL DEFAULT 0,
-  `date` datetime NOT NULL,
-  `region` int(11) DEFAULT NULL,
-  `grade` int(11) DEFAULT NULL
+  `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `justification`
+--
+
+INSERT INTO `justification` (`id`, `claim`, `description`, `accused`, `date`) VALUES
+(1, 3, 'rejected your claim because you are not providing the necessary documents', 0, '2025-02-09 13:41:22');
 
 -- --------------------------------------------------------
 
@@ -240,6 +250,17 @@ CREATE TABLE `payment` (
   `validation` tinyint(1) DEFAULT 0,
   `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payment`
+--
+
+INSERT INTO `payment` (`id`, `claim`, `amount`, `validation`, `date`) VALUES
+(1, 1, '1000', 0, '2025-02-09 13:42:47'),
+(2, 1, '1000', 0, '2025-02-09 13:43:16'),
+(3, 1, '1000', 0, '2025-02-09 13:43:18'),
+(6, 1, '1000', 0, '2025-02-09 13:48:16'),
+(7, 1, '1000', 0, '2025-02-09 13:48:18');
 
 -- --------------------------------------------------------
 
@@ -312,7 +333,8 @@ INSERT INTO `user` (`id`, `username`, `password`, `phone`, `fullname`, `region`)
 (5, 'amira22', '$2b$10$HJODWEHAyNFSLJdO7NAJOO1MajgYOdUR19mEFJjg483hi9TYXFO4G', '0543678294', 'Said Abdessameud Amira', 1),
 (6, 'Dryassine22', '$2b$10$CTsz793H7OasrTbZIBdT9e9/Syh17tj0xtNAVJE4DwhBYhF9S17.i', '0765342984', 'Dr Yassine Hakem', 2),
 (7, 'Drloukmane23', '$2b$10$haBVlYFlXA486/.NC8YK0uv2/Q4KtZNu5aAIsrFm39wA/vUZTlDeS', '0564328734', 'Dr Loukmane Nouar', 3),
-(8, 'hopitalA1', '$2b$10$eY.J3tqW/YJjuLf2l1fiBOAhkScRUcbjhrJYPJsSCbuRwjZrPo6z6', '0654382976', 'Hopital A', 1);
+(8, 'hopitalA1', '$2b$10$eY.J3tqW/YJjuLf2l1fiBOAhkScRUcbjhrJYPJsSCbuRwjZrPo6z6', '0654382976', 'Hopital A', 1),
+(9, 'zino31', '$2b$10$sy7s.Xd8GxjedMiqDGRf9u0VnWYx.QHjpwjSVGLqdKMQLNCzEhh7q', '078532589', 'ZINE EDDINE BOUMRAR', 3);
 
 --
 -- Indexes for dumped tables
@@ -376,9 +398,7 @@ ALTER TABLE `insurer`
 --
 ALTER TABLE `justification`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_justification_claim` (`claim`),
-  ADD KEY `region` (`region`),
-  ADD KEY `grade` (`grade`);
+  ADD KEY `idx_justification_claim` (`claim`);
 
 --
 -- Indexes for table `medicalservice`
@@ -442,13 +462,13 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `claim`
 --
 ALTER TABLE `claim`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `client`
 --
 ALTER TABLE `client`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `document`
@@ -472,7 +492,7 @@ ALTER TABLE `insurer`
 -- AUTO_INCREMENT for table `justification`
 --
 ALTER TABLE `justification`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `medicalservice`
@@ -490,7 +510,7 @@ ALTER TABLE `observation`
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `policy`
@@ -508,7 +528,7 @@ ALTER TABLE `region`
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- Constraints for dumped tables
@@ -530,17 +550,17 @@ ALTER TABLE `admin`
 -- Constraints for table `claim`
 --
 ALTER TABLE `claim`
-  ADD CONSTRAINT `claim_ibfk_93` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_94` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_95` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_96` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `claim_ibfk_1267` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_1268` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_1269` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_1270` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `client`
 --
 ALTER TABLE `client`
-  ADD CONSTRAINT `client_ibfk_263` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `client_ibfk_264` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `client_ibfk_991` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `client_ibfk_992` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document`
@@ -552,16 +572,14 @@ ALTER TABLE `document`
 -- Constraints for table `insurer`
 --
 ALTER TABLE `insurer`
-  ADD CONSTRAINT `insurer_ibfk_25` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `insurer_ibfk_26` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `insurer_ibfk_695` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `insurer_ibfk_696` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `justification`
 --
 ALTER TABLE `justification`
-  ADD CONSTRAINT `justification_ibfk_61` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `justification_ibfk_62` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `justification_ibfk_63` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `justification_ibfk_1` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `medicalservice`

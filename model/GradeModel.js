@@ -13,7 +13,7 @@ const Grade = sequelize.define('grade', {
         required: true,
     },
     exclusions: {
-        type: DataTypes.TEXT,
+        type: DataTypes.ENUM('secure', 'confidential', 'unclassified'),
         allowNull: false,
         required: true,
     },

@@ -1,8 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/Database');
 const Claim = require('./ClaimModel');
-const Region = require('./RegionModel');
-const Grade = require('./GradeModel');
 
 const Justification = sequelize.define('justification', {
     id: {
@@ -41,7 +39,5 @@ const Justification = sequelize.define('justification', {
 });
 
 Justification.belongsTo(Claim, { foreignKey: 'claim', as: 'claimAssociation' });
-Justification.belongsTo(Region, { foreignKey: 'region', as: 'regionAssociation' });
-Justification.belongsTo(Grade, { foreignKey: 'grade', as: 'gradeAssociation' });
 
 module.exports = Justification;

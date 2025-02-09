@@ -483,7 +483,7 @@ const rejectClaimByInsurer = asyncErrorHandler(async (req, res, next) => {
 
     // Check if all required fields are present
     if (!claim || !justification) {
-        return next(new CustomError('Tous les champs sont obligatoires', 400));
+        return next(new CustomError('All fields are required', 400));
     }
 
     // Start transaction
@@ -615,14 +615,24 @@ const addPaymentToClaimByInsurer = asyncErrorHandler(async (req, res, next) => {
         if (totalPayment + parseFloat(amount) === parseFloat(claimToPay.claim_amount)) {
             claimToPay.status = 'paid';
             claimToPay.closed = false;
+            const paidClaim = await claimToPay.save({ transaction });
+    
+            if (!paidClaim) {
+                await transaction.rollback();
+                return next(new CustomError('Failed to pay claim', 500));
+            }
+
+            // Commit transaction
+            await transaction.commit();
+
+            // Send response
+            return res.status(200).json({
+                success: true,
+                message: 'The full amount has been paid successfully',
+            });
+            
         }
 
-        const paidClaim = await claimToPay.save({ transaction });
-
-        if (!paidClaim) {
-            await transaction.rollback();
-            return next(new CustomError('Failed to pay claim', 500));
-        }
 
         // Commit transaction
         await transaction.commit();
@@ -630,7 +640,7 @@ const addPaymentToClaimByInsurer = asyncErrorHandler(async (req, res, next) => {
         // Send response
         res.status(200).json({
             success: true,
-            message: 'Claim paid successfully',
+            message: 'Payment added successfully',
         });
 
     } catch (error) {
