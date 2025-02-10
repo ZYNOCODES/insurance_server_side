@@ -503,6 +503,77 @@ const getAllRejectedClaims = asyncErrorHandler(async (req, res, next) => {
     //send response
     res.status(200).json(claims);
 });
+// Get all archived claims
+const getAllArchivedClaims = asyncErrorHandler(async (req, res, next) => {
+    const { id } = req.params;
+    //get all claims
+    const claims = await Claim.findAll({
+        where:{
+            closed: true,
+            status: 'paid',
+            insurer: id
+        },
+        include: [
+            {
+                model: MedicalService,
+                as: 'medicalServiceAssociation',
+                attributes: ['user', 'type'],
+                include: [
+                    {
+                        model: User,
+                        as: 'userAssociation',
+                        attributes: ['id', 'region', 'fullname', 'phone'],
+                    },
+                ],
+            },
+            {
+                model: Client,
+                as: 'clientAssociation',
+                attributes: ['user'],
+                include: [
+                    {
+                        model: User,
+                        as: 'userAssociation',
+                        attributes: ['id', 'region', 'fullname', 'phone'],
+                    },
+                ],
+            }
+        ],
+    });
+    //check if claims were found
+    if (!claims || claims.length <= 0) {
+        return next(new CustomError('No claims found', 404));
+    }
+    // Filter claims with status "paid"
+    const paidClaims = claims.filter((claim) => claim.status === 'paid');
+
+    // Fetch payments for all "paid" claims in a single query
+    const payments = await Payment.findAll({
+        where: {
+            claim: paidClaims.map((claim) => claim.id),
+        },
+    });
+
+    // Map payments to their respective claims
+    const paymentMap = payments.reduce((map, payment) => {
+        if (!map[payment.claim]) {
+            map[payment.claim] = 0;
+        }
+        map[payment.claim] += parseFloat(payment.amount);
+        return map;
+    }, {});
+
+    // Add reimbursement amount to paid claims
+    const updatedClaims = claims.map((claim) => {
+        if (claim.status === 'paid') {
+            claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
+        }
+        return claim;
+    });
+
+    //send response
+    res.status(200).json(updatedClaims);
+});
 // take a claim by insurer
 const takeClaimByInsurer = asyncErrorHandler(async (req, res, next) => {
     const { id } = req.params;
@@ -867,6 +938,7 @@ module.exports = {
     getAllApprovedClaims,
     getAllPaidClaims,
     getAllRejectedClaims,
+    getAllArchivedClaims,
     takeClaimByInsurer,
     rejectClaimByInsurer,
     addPaymentToClaimByInsurer,

@@ -10,6 +10,7 @@ const {
     getAllApprovedClaims,
     getAllPaidClaims,
     getAllRejectedClaims,
+    getAllArchivedClaims,
     takeClaimByInsurer,
     rejectClaimByInsurer,
     addPaymentToClaimByInsurer,
@@ -51,6 +52,8 @@ router.get('/insurer/approved/:id', checkAuthrozation([process.env.INSURER_TYPE]
 router.get('/insurer/paid/:id', checkAuthrozation([process.env.INSURER_TYPE]), checkInsurerOwnership, getAllPaidClaims);
 //Get all rejected claims
 router.get('/insurer/rejected/:id', checkAuthrozation([process.env.INSURER_TYPE]), checkInsurerOwnership, getAllRejectedClaims);
+//Get all archived claims
+router.get('/insurer/archived/:id', checkAuthrozation([process.env.INSURER_TYPE]), checkInsurerOwnership, getAllArchivedClaims);
 //Take a claim by insurer
 router.patch('/insurer/take/:id', limiter, checkAuthrozation([process.env.INSURER_TYPE]), checkInsurerOwnership, takeClaimByInsurer);
 //Reject a claim by insurer
