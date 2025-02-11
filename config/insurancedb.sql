@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 09, 2025 at 05:09 PM
+-- Generation Time: Feb 11, 2025 at 06:13 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -21,26 +21,6 @@ SET time_zone = "+00:00";
 -- Database: `insurancedb`
 --
 
-DELIMITER $$
---
--- Procedures
---
-CREATE DEFINER=`root`@`localhost` PROCEDURE `DropPhoneIndexes` ()   BEGIN
-    DECLARE i INT DEFAULT 14;
-    DECLARE index_name VARCHAR(50);
-
-    WHILE i <= 21 DO
-        SET index_name = CONCAT('phone_', i);
-        SET @sql = CONCAT('ALTER TABLE `user` DROP INDEX `', index_name, '`');
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-        SET i = i + 1;
-    END WHILE;
-END$$
-
-DELIMITER ;
-
 -- --------------------------------------------------------
 
 --
@@ -50,10 +30,17 @@ DELIMITER ;
 CREATE TABLE `accusation` (
   `id` int(11) NOT NULL,
   `justification` int(11) NOT NULL,
-  `description` int(11) NOT NULL,
+  `description` text NOT NULL,
   `status` enum('approved','rejected','pending') NOT NULL DEFAULT 'pending',
-  `date` datetime NOT NULL DEFAULT current_timestamp()
+  `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `accusation`
+--
+
+INSERT INTO `accusation` (`id`, `justification`, `description`, `status`, `date`) VALUES
+(1, 4, 'sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas v v sdas sdas', 'pending', '2025-02-11 17:43:32');
 
 -- --------------------------------------------------------
 
@@ -87,19 +74,20 @@ CREATE TABLE `claim` (
   `status` enum('pending','approved','rejected','paid') DEFAULT 'pending',
   `closed` tinyint(1) DEFAULT 0,
   `claim_amount` varchar(255) NOT NULL,
-  `region` int(11) NOT NULL
+  `region` int(11) NOT NULL,
+  `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `claim`
 --
 
-INSERT INTO `claim` (`id`, `client`, `medicalservice`, `insurer`, `status`, `closed`, `claim_amount`, `region`) VALUES
-(1, 1, 1, 1, 'paid', 0, '5000', 2),
-(3, 1, 1, 2, 'rejected', 1, '10000', 2),
-(4, 4, 1, NULL, 'pending', 0, '100', 2),
-(5, 4, 2, NULL, 'pending', 0, '1000', 3),
-(6, 4, 3, NULL, 'pending', 0, '20000', 1);
+INSERT INTO `claim` (`id`, `client`, `medicalservice`, `insurer`, `status`, `closed`, `claim_amount`, `region`, `date`) VALUES
+(8, 4, 2, NULL, 'pending', 0, '20000', 3, '2025-02-11 15:36:54'),
+(9, 1, 1, 2, 'paid', 0, '10000', 2, '2025-02-11 15:38:47'),
+(10, 1, 1, 2, 'paid', 0, '5000', 2, '2025-02-11 15:40:09'),
+(11, 1, 1, 2, 'rejected', 1, '7000', 2, '2025-02-11 15:45:27'),
+(12, 1, 1, 2, 'approved', 0, '5800', 2, '2025-02-11 16:45:48');
 
 -- --------------------------------------------------------
 
@@ -198,7 +186,7 @@ CREATE TABLE `justification` (
 --
 
 INSERT INTO `justification` (`id`, `claim`, `description`, `accused`, `date`) VALUES
-(1, 3, 'rejected your claim because you are not providing the necessary documents', 0, '2025-02-09 13:41:22');
+(4, 11, 'You d\'ont have the right documents', 0, '2025-02-11 15:46:04');
 
 -- --------------------------------------------------------
 
@@ -256,11 +244,11 @@ CREATE TABLE `payment` (
 --
 
 INSERT INTO `payment` (`id`, `claim`, `amount`, `validation`, `date`) VALUES
-(1, 1, '1000', 0, '2025-02-09 13:42:47'),
-(2, 1, '1000', 0, '2025-02-09 13:43:16'),
-(3, 1, '1000', 0, '2025-02-09 13:43:18'),
-(6, 1, '1000', 0, '2025-02-09 13:48:16'),
-(7, 1, '1000', 0, '2025-02-09 13:48:18');
+(14, 9, '2000', 0, '2025-02-11 15:41:23'),
+(15, 10, '1000', 0, '2025-02-11 15:44:00'),
+(16, 12, '500', 1, '2025-02-11 16:47:04'),
+(17, 12, '10', 0, '2025-02-11 16:47:27'),
+(18, 12, '5', 0, '2025-02-11 16:47:31');
 
 -- --------------------------------------------------------
 
@@ -282,9 +270,9 @@ CREATE TABLE `policy` (
 --
 
 INSERT INTO `policy` (`id`, `name`, `limit`, `co_pay`, `exclusions`, `date`) VALUES
-(1, 'Basic Health Insurance Plan', 15000, 20, 'Prescription medication', '2025-02-09 02:36:36'),
-(2, 'Premium Health Insurance Plan', 50000, 10, 'Experimental treatments, prescription medication, non-prescription medication', '2025-02-09 02:37:21'),
-(3, 'Family Plan', 100000, 20, 'Experimental treatments, non-prescription medication.', '2025-02-09 02:39:46');
+(1, 'Basic Health Insurance Plan', 150000, 20, 'Prescription medication', '2025-02-09 02:36:36'),
+(2, 'Premium Health Insurance Plan', 500000, 10, 'Experimental treatments, prescription medication, non-prescription medication', '2025-02-09 02:37:21'),
+(3, 'Family Plan', 1000000, 20, 'Experimental treatments, non-prescription medication.', '2025-02-09 02:39:46');
 
 -- --------------------------------------------------------
 
@@ -450,7 +438,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `accusation`
 --
 ALTER TABLE `accusation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `admin`
@@ -462,7 +450,7 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `claim`
 --
 ALTER TABLE `claim`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `client`
@@ -492,7 +480,7 @@ ALTER TABLE `insurer`
 -- AUTO_INCREMENT for table `justification`
 --
 ALTER TABLE `justification`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `medicalservice`
@@ -510,7 +498,7 @@ ALTER TABLE `observation`
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `policy`
@@ -538,7 +526,7 @@ ALTER TABLE `user`
 -- Constraints for table `accusation`
 --
 ALTER TABLE `accusation`
-  ADD CONSTRAINT `fk_accusation_justification` FOREIGN KEY (`justification`) REFERENCES `justification` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `accusation_ibfk_1` FOREIGN KEY (`justification`) REFERENCES `justification` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `admin`
@@ -550,17 +538,17 @@ ALTER TABLE `admin`
 -- Constraints for table `claim`
 --
 ALTER TABLE `claim`
-  ADD CONSTRAINT `claim_ibfk_1267` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_1268` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_1269` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_1270` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `claim_ibfk_3446` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_3447` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_3448` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_3449` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `client`
 --
 ALTER TABLE `client`
-  ADD CONSTRAINT `client_ibfk_991` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `client_ibfk_992` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `client_ibfk_2273` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `client_ibfk_2274` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document`
@@ -572,8 +560,8 @@ ALTER TABLE `document`
 -- Constraints for table `insurer`
 --
 ALTER TABLE `insurer`
-  ADD CONSTRAINT `insurer_ibfk_695` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `insurer_ibfk_696` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `insurer_ibfk_43` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `insurer_ibfk_44` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `justification`
