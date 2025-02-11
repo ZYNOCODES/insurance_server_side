@@ -27,8 +27,8 @@ const upload = multer({
     error.status = 400; // Bad Request
     cb(error);
   }
-}).single('file');
+}).array('files', 10);
 
 module.exports = {
     upload,
-}
+};

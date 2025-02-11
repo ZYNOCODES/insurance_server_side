@@ -12,11 +12,13 @@ const Justification = require('../model/JustificationModel.js');
 const Payment = require('../model/PaymentModel.js');
 const Region = require('../model/RegionModel.js');
 const Policy = require('../model/PolicyModel.js');
+const Document = require('../model/DocumentModel.js');
 
 // Create new claim
 const createNewClaim = asyncErrorHandler(async (req, res, next) => {
     const { id } = req.params;
     const { medicalservice, claim_amount } = req.body;
+    const files = req.files;    
     //check if all required fields are present
     if (!medicalservice || !claim_amount) {
         return next(new CustomError('Medical service and claim amount are required fields', 400));
@@ -25,6 +27,10 @@ const createNewClaim = asyncErrorHandler(async (req, res, next) => {
     if (!validator.isNumeric(claim_amount) && claim_amount <= 0) {
         return next(new CustomError('Claim amount must be a number greater than 0', 400));
     }    
+    //check if files are present
+    if (!files || files.length <= 0) {
+        return next(new CustomError('You need to upload at least one file', 400));
+    }
     //check client policy
     const clientPolicy = await Policy.findOne({
         where: {
@@ -65,24 +71,47 @@ const createNewClaim = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('Medical service not found', 404));
     }
     
-    //create new claim
-    const newClaim = await Claim.create({
-        client: id,
-        medicalservice,
-        claim_amount,
-        status: 'pending',
-        closed: false,
-        region: medicalService.userAssociation.region,
-    });
-    //check if new claim was created
-    if (!newClaim) {
-        return next(new CustomError('Failed to create claim', 500));
+    const transaction = await sequelize.transaction();
+    try {
+        //create new claim
+        const newClaim = await Claim.create({
+            client: id,
+            medicalservice,
+            claim_amount,
+            status: 'pending',
+            closed: false,
+            region: medicalService.userAssociation.region,
+        }, { transaction });
+        //check if new claim was created
+        if (!newClaim) {
+            return next(new CustomError('Failed to create claim', 500));
+        }
+        //saved files
+        const filesName = req.files.map(file => file.filename);
+        const filesData = filesName.map(filename => ({
+            claim : newClaim.id ,
+            name: filename,
+        }));
+        //create a new photo
+        const savedDocuments = await Document.bulkCreate(filesData, { transaction });
+        //check if photo was created
+        if (!savedDocuments || savedDocuments.length <= 0) {
+            const error = new CustomError('Failed to save files', 500);
+            transaction.rollback();
+            return next(error);
+        }
+
+        await transaction.commit();
+        //send response
+        res.status(201).json({
+            success: true,
+            message: 'Claim created successfully',
+        });
+    } catch (error) {
+        const customError = new CustomError('Failed to create claim', 500);
+        transaction.rollback();
+        return next(customError);
     }
-    //send response
-    res.status(201).json({
-        success: true,
-        message: 'Claim created successfully',
-    });
 });
 // Update claim 
 const updateClaim = asyncErrorHandler(async (req, res, next) => {
@@ -397,8 +426,27 @@ const getAllPendingClaims = asyncErrorHandler(async (req, res, next) => {
     if (!claims || claims.length <= 0) {
         return next(new CustomError('No claims found', 404));
     }
+    //get all documents for each claim
+    const documents = await Document.findAll({
+        where: {
+            claim: claims.map((claim) => claim.id),
+        },
+    });
+    // Map documents to their respective claims
+    const documentMap = documents.reduce((map, document) => {
+        if (!map[document.claim]) {
+            map[document.claim] = [];
+        }
+        map[document.claim].push(document.name);
+        return map;
+    }, {});
+    // Add documents to approved claims
+    const updatedClaims = claims.map((claim) => {
+        claim.dataValues.documents = documentMap[claim.id] || [];
+        return claim;
+    });
     //send response
-    res.status(200).json(claims);
+    res.status(200).json(updatedClaims);
 });
 // Get all approved claims
 const getAllApprovedClaims = asyncErrorHandler(async (req, res, next) => {
@@ -451,8 +499,27 @@ const getAllApprovedClaims = asyncErrorHandler(async (req, res, next) => {
     if (!claims || claims.length <= 0) {
         return next(new CustomError('No claims found', 404));
     }
+    //get all documents for each claim
+    const documents = await Document.findAll({
+        where: {
+            claim: claims.map((claim) => claim.id),
+        },
+    });
+    // Map documents to their respective claims
+    const documentMap = documents.reduce((map, document) => {
+        if (!map[document.claim]) {
+            map[document.claim] = [];
+        }
+        map[document.claim].push(document.name);
+        return map;
+    }, {});
+    // Add documents to approved claims
+    const updatedClaims = claims.map((claim) => {
+        claim.dataValues.documents = documentMap[claim.id] || [];
+        return claim;
+    });
     //send response
-    res.status(200).json(claims);
+    res.status(200).json(updatedClaims);
 });
 // Get all paid claims
 const getAllPaidClaims = asyncErrorHandler(async (req, res, next) => {
@@ -524,11 +591,27 @@ const getAllPaidClaims = asyncErrorHandler(async (req, res, next) => {
         return map;
     }, {});
 
+    //get all documents for each claim
+    const documents = await Document.findAll({
+        where: {
+            claim: claims.map((claim) => claim.id),
+        },
+    });
+    // Map documents to their respective claims
+    const documentMap = documents.reduce((map, document) => {
+        if (!map[document.claim]) {
+            map[document.claim] = [];
+        }
+        map[document.claim].push(document.name);
+        return map;
+    }, {});
+
     // Add reimbursement amount to paid claims
     const updatedClaims = claims.map((claim) => {
         if (claim.status === 'paid') {
             claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
         }
+        claim.dataValues.documents = documentMap[claim.id] || [];
         return claim;
     });
 
@@ -586,8 +669,27 @@ const getAllRejectedClaims = asyncErrorHandler(async (req, res, next) => {
     if (!claims || claims.length <= 0) {
         return next(new CustomError('No claims found', 404));
     }
+    //get all documents for each claim
+    const documents = await Document.findAll({
+        where: {
+            claim: claims.map((claim) => claim.id),
+        },
+    });
+    // Map documents to their respective claims
+    const documentMap = documents.reduce((map, document) => {
+        if (!map[document.claim]) {
+            map[document.claim] = [];
+        }
+        map[document.claim].push(document.name);
+        return map;
+    }, {});
+    // Add documents to approved claims
+    const updatedClaims = claims.map((claim) => {
+        claim.dataValues.documents = documentMap[claim.id] || [];
+        return claim;
+    });
     //send response
-    res.status(200).json(claims);
+    res.status(200).json(updatedClaims);
 });
 // Get all archived claims
 const getAllArchivedClaims = asyncErrorHandler(async (req, res, next) => {
@@ -659,11 +761,27 @@ const getAllArchivedClaims = asyncErrorHandler(async (req, res, next) => {
         return map;
     }, {});
 
+    //get all documents for each claim
+    const documents = await Document.findAll({
+        where: {
+            claim: claims.map((claim) => claim.id),
+        },
+    });
+    // Map documents to their respective claims
+    const documentMap = documents.reduce((map, document) => {
+        if (!map[document.claim]) {
+            map[document.claim] = [];
+        }
+        map[document.claim].push(document.name);
+        return map;
+    }, {});
+
     // Add reimbursement amount to paid claims
     const updatedClaims = claims.map((claim) => {
         if (claim.status === 'paid') {
             claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
         }
+        claim.dataValues.documents = documentMap[claim.id] || [];
         return claim;
     });
 

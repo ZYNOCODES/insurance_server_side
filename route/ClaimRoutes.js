@@ -23,14 +23,14 @@ const checkAuthentification = require('../middleware/RequireAuth.js');
 const checkAuthrozation = require('../middleware/Authorization.js');
 const checkClientOwnership = require('../middleware/CheckClientOwnership.js');
 const checkInsurerOwnership = require('../middleware/CheckInsurerOwnership.js');
-
+const { upload } = require('../util/ImageUploader.js');
 
 //secure routes below
 router.use(checkAuthentification);
 
 //CLIENT ROUTES
 //Create a new claim
-router.post('/client/new/:id', limiter, checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, createNewClaim);
+router.post('/client/new/:id', limiter, checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, upload, createNewClaim);
 //Update a claim
 router.patch('/client/update/:id', limiter, checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, updateClaim);
 //Delete a claim
