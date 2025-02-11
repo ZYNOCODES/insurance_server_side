@@ -15,7 +15,8 @@ const {
     rejectClaimByInsurer,
     addPaymentToClaimByInsurer,
     confirmPaymentByClient,
-    getClientClaimStatistics
+    getClientClaimStatistics,
+    getTotalClaimsAmount
 } = require('../controller/ClaimController.js');
 const limiter = require('../middleware/RateLimiting.js');
 const checkAuthentification = require('../middleware/RequireAuth.js');
@@ -60,6 +61,8 @@ router.patch('/insurer/take/:id', limiter, checkAuthrozation([process.env.INSURE
 router.patch('/insurer/reject/:id', limiter, checkAuthrozation([process.env.INSURER_TYPE]), checkInsurerOwnership, rejectClaimByInsurer);
 //Pay a claim by insurer
 router.patch('/insurer/pay/:id', limiter, checkAuthrozation([process.env.INSURER_TYPE]), checkInsurerOwnership, addPaymentToClaimByInsurer);
+//Get total claims amount by client
+router.get('/insurer/total/:id', checkAuthrozation([process.env.INSURER_TYPE]), getTotalClaimsAmount);
 
 
 

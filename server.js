@@ -16,8 +16,8 @@ const GradeRoutes = require('./route/GradeRoutes.js');
 const PolicyRoutes = require('./route/PolicyRoutes.js');
 const RegionRoutes = require('./route/RegionRoutes.js');
 const MedicalServiceRoutes = require('./route/MedicalServiceRoutes.js');
-
-
+const PaymentRoutes = require('./route/PaymentRoutes.js');
+const JustificationRoutes = require('./route/JustificationRoutes.js');
 
 //http server
 const http = require('http');
@@ -45,6 +45,8 @@ app.use('/api/grade', GradeRoutes);
 app.use('/api/policy', PolicyRoutes);
 app.use('/api/region', RegionRoutes);
 app.use('/api/medicalservice', MedicalServiceRoutes);
+app.use('/api/payment', PaymentRoutes);
+app.use('/api/justification', JustificationRoutes);
 
 //error handling
 app.use(ErrorHandler);

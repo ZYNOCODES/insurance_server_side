@@ -10,6 +10,8 @@ const Client = require('../model/ClientModel.js');
 const User = require('../model/UserModel.js');
 const Justification = require('../model/JustificationModel.js');
 const Payment = require('../model/PaymentModel.js');
+const Region = require('../model/RegionModel.js');
+const Policy = require('../model/PolicyModel.js');
 
 // Create new claim
 const createNewClaim = asyncErrorHandler(async (req, res, next) => {
@@ -22,6 +24,29 @@ const createNewClaim = asyncErrorHandler(async (req, res, next) => {
     //check if claim amount is a number
     if (!validator.isNumeric(claim_amount) && claim_amount <= 0) {
         return next(new CustomError('Claim amount must be a number greater than 0', 400));
+    }    
+    //check client policy
+    const clientPolicy = await Policy.findOne({
+        where: {
+            id: req.user.policy,
+        },
+    });
+    if (!clientPolicy) {
+        return next(new CustomError('Client policy not found', 404));
+    }
+    //check if claim amount for this year is less than policy limit
+    const currentYear = new Date().getFullYear();
+    const claimsThisYear = await Claim.findAll({
+        where: {
+            client: id,
+            date: {
+                [Op.gte]: new Date(currentYear, 0, 1),
+            }
+        },
+    });
+    const totalClaimsThisYear = claimsThisYear.reduce((sum, claim) => sum + parseFloat(claim.claim_amount), 0);    
+    if (totalClaimsThisYear + parseFloat(claim_amount) > clientPolicy.limit) {
+        return next(new CustomError('Claim amount exceeds policy limit', 400));
     }
     //check if medical service exists
     const medicalService = await MedicalService.findOne({
@@ -192,6 +217,11 @@ const getAllClaimsByClient = asyncErrorHandler(async (req, res, next) => {
                         attributes: ['id', 'region', 'fullname', 'phone'],
                     },
                 ],
+            },
+            {
+                model: Region,
+                as: 'regionAssociation',
+                attributes: ['name'],
             }
         ],
     });
@@ -264,6 +294,11 @@ const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) =>
                         attributes: ['id', 'region', 'fullname', 'phone'],
                     },
                 ],
+            },
+            {
+                model: Region,
+                as: 'regionAssociation',
+                attributes: ['name'],
             }
         ],
     });
@@ -273,6 +308,7 @@ const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) =>
     }
     // Filter claims with status "paid"
     const paidClaims = claims.filter((claim) => claim.status === 'paid');
+    const rejectedClaims = claims.filter((claim) => claim.status === 'rejected');
 
     // Fetch payments for all "paid" claims in a single query
     const payments = await Payment.findAll({
@@ -290,14 +326,24 @@ const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) =>
         return map;
     }, {});
 
+    //Fetch justification for all "rejected" claims in a single query
+    const justifications = await Justification.findAll({
+        where: {
+            claim: rejectedClaims.map((claim) => claim.id),
+        },
+    });
+    
     // Add reimbursement amount to paid claims
     const updatedClaims = claims.map((claim) => {
         if (claim.status === 'paid') {
             claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
         }
+        if (claim.status === 'rejected') {
+            claim.dataValues.justification = justifications.find((justification) => justification.claim === claim.id);
+        }
         return claim;
     });
-
+    
     //send response
     res.status(200).json(updatedClaims);
 }); 
@@ -333,7 +379,17 @@ const getAllPendingClaims = asyncErrorHandler(async (req, res, next) => {
                         as: 'userAssociation',
                         attributes: ['id', 'region', 'fullname', 'phone'],
                     },
+                    {
+                        model: Policy,
+                        as: 'policyAssociation',
+                        attributes: ['name', 'limit', 'co_pay', 'exclusions'],
+                    }
                 ],
+            },
+            {
+                model: Region,
+                as: 'regionAssociation',
+                attributes: ['name'],
             }
         ],
     });
@@ -377,7 +433,17 @@ const getAllApprovedClaims = asyncErrorHandler(async (req, res, next) => {
                         as: 'userAssociation',
                         attributes: ['id', 'region', 'fullname', 'phone'],
                     },
+                    {
+                        model: Policy,
+                        as: 'policyAssociation',
+                        attributes: ['name', 'limit', 'co_pay', 'exclusions'],
+                    }
                 ],
+            },
+            {
+                model: Region,
+                as: 'regionAssociation',
+                attributes: ['name'],
             }
         ],
     });
@@ -421,7 +487,17 @@ const getAllPaidClaims = asyncErrorHandler(async (req, res, next) => {
                         as: 'userAssociation',
                         attributes: ['id', 'region', 'fullname', 'phone'],
                     },
+                    {
+                        model: Policy,
+                        as: 'policyAssociation',
+                        attributes: ['name', 'limit', 'co_pay', 'exclusions'],
+                    }
                 ],
+            },
+            {
+                model: Region,
+                as: 'regionAssociation',
+                attributes: ['name'],
             }
         ],
     });
@@ -492,7 +568,17 @@ const getAllRejectedClaims = asyncErrorHandler(async (req, res, next) => {
                         as: 'userAssociation',
                         attributes: ['id', 'region', 'fullname', 'phone'],
                     },
+                    {
+                        model: Policy,
+                        as: 'policyAssociation',
+                        attributes: ['name', 'limit', 'co_pay', 'exclusions'],
+                    }
                 ],
+            },
+            {
+                model: Region,
+                as: 'regionAssociation',
+                attributes: ['name'],
             }
         ],
     });
@@ -536,7 +622,17 @@ const getAllArchivedClaims = asyncErrorHandler(async (req, res, next) => {
                         as: 'userAssociation',
                         attributes: ['id', 'region', 'fullname', 'phone'],
                     },
+                    {
+                        model: Policy,
+                        as: 'policyAssociation',
+                        attributes: ['name', 'limit', 'co_pay', 'exclusions'],
+                    }
                 ],
+            },
+            {
+                model: Region,
+                as: 'regionAssociation',
+                attributes: ['name'],
             }
         ],
     });
@@ -700,9 +796,10 @@ const addPaymentToClaimByInsurer = asyncErrorHandler(async (req, res, next) => {
         const claimToPay = await Claim.findOne({
             where: {
                 id: claim,
-                status: 'approved',
+                status: {
+                    [Op.or]: ['approved', 'paid'],
+                },
                 closed: false,
-                region: req.user.userAssociation.region,
                 insurer: id,
             },
             transaction
@@ -726,7 +823,15 @@ const addPaymentToClaimByInsurer = asyncErrorHandler(async (req, res, next) => {
         });
 
         let totalPayment = existingPayments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+        console.log(totalPayment);
+        
+        //check if total payment has been paid
+        if (totalPayment == claimToPay.claim_amount) {
+            await transaction.rollback();
+            return next(new CustomError('The full amount has already been paid', 400));
+        }
 
+        //check if total payment amount is greater than claim amount
         if (totalPayment + parseFloat(amount) > claimToPay.claim_amount) {
             await transaction.rollback();
             return next(new CustomError('Total payment amount cannot be greater than claim amount', 400));
@@ -927,6 +1032,27 @@ const getClientClaimStatistics = asyncErrorHandler(async (req, res, next) => {
         totalvalidatedReimbursement,
     });
 });
+//claculate the total claims amount for the current year
+const getTotalClaimsAmount = asyncErrorHandler(async (req, res, next) => {
+    const { id } = req.params;
+    //get all claims
+    const claims = await Claim.findAll({
+        where: {
+            client: id,
+            date: {
+                [Op.gte]: new Date(new Date().getFullYear(), 0, 1),
+            },
+        },
+    });    
+    //check if claims were found
+    if (!claims || claims.length <= 0) {
+        return next(new CustomError('No claims found', 404));
+    }
+    // Total amount of claims 
+    const totalClaimAmount = claims.reduce((sum, claim) => sum + parseFloat(claim.claim_amount), 0);
+    //send response
+    res.status(200).json(totalClaimAmount);
+});
 
 module.exports = {
     createNewClaim,
@@ -943,5 +1069,6 @@ module.exports = {
     rejectClaimByInsurer,
     addPaymentToClaimByInsurer,
     confirmPaymentByClient,
-    getClientClaimStatistics
+    getClientClaimStatistics,
+    getTotalClaimsAmount,
 }
