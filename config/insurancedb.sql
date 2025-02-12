@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 11, 2025 at 06:13 PM
+-- Generation Time: Feb 12, 2025 at 07:02 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -87,7 +87,10 @@ INSERT INTO `claim` (`id`, `client`, `medicalservice`, `insurer`, `status`, `clo
 (9, 1, 1, 2, 'paid', 0, '10000', 2, '2025-02-11 15:38:47'),
 (10, 1, 1, 2, 'paid', 0, '5000', 2, '2025-02-11 15:40:09'),
 (11, 1, 1, 2, 'rejected', 1, '7000', 2, '2025-02-11 15:45:27'),
-(12, 1, 1, 2, 'approved', 0, '5800', 2, '2025-02-11 16:45:48');
+(12, 1, 1, 2, 'paid', 0, '5800', 2, '2025-02-11 16:45:48'),
+(13, 1, 1, 2, 'rejected', 1, '9000', 2, '2025-02-11 18:26:49'),
+(14, 1, 1, 2, 'approved', 0, '8000', 2, '2025-02-11 19:15:12'),
+(15, 1, 1, NULL, 'pending', 0, '5000', 2, '2025-02-11 19:17:58');
 
 -- --------------------------------------------------------
 
@@ -123,9 +126,23 @@ INSERT INTO `client` (`id`, `user`, `age`, `address`, `job`, `married`, `policy`
 CREATE TABLE `document` (
   `id` int(11) NOT NULL,
   `claim` int(11) NOT NULL,
-  `name` varchar(55) NOT NULL,
-  `date` datetime NOT NULL DEFAULT current_timestamp()
+  `name` varchar(255) NOT NULL,
+  `date` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `document`
+--
+
+INSERT INTO `document` (`id`, `claim`, `name`, `date`) VALUES
+(1, 13, '1739298408479.jpg', '2025-02-11 18:26:49'),
+(2, 13, '1739298408734.jpg', '2025-02-11 18:26:49'),
+(3, 13, '1739298408872.jpg', '2025-02-11 18:26:49'),
+(4, 13, '1739298409146.jpg', '2025-02-11 18:26:49'),
+(5, 14, '1739301305375.jpg', '2025-02-11 19:15:12'),
+(6, 14, '1739301307325.jpg', '2025-02-11 19:15:12'),
+(7, 14, '1739301309923.jpg', '2025-02-11 19:15:12'),
+(8, 15, '1739301478279.jpg', '2025-02-11 19:17:58');
 
 -- --------------------------------------------------------
 
@@ -145,7 +162,8 @@ CREATE TABLE `grade` (
 
 INSERT INTO `grade` (`id`, `name`, `exclusions`) VALUES
 (1, 'A', 'confidential'),
-(2, 'B', 'unclassified');
+(2, 'B', 'secure'),
+(5, 'C', 'unclassified');
 
 -- --------------------------------------------------------
 
@@ -165,7 +183,8 @@ CREATE TABLE `insurer` (
 
 INSERT INTO `insurer` (`id`, `user`, `grade`) VALUES
 (1, 2, 1),
-(2, 3, 2);
+(2, 3, 2),
+(4, 12, 1);
 
 -- --------------------------------------------------------
 
@@ -186,7 +205,8 @@ CREATE TABLE `justification` (
 --
 
 INSERT INTO `justification` (`id`, `claim`, `description`, `accused`, `date`) VALUES
-(4, 11, 'You d\'ont have the right documents', 0, '2025-02-11 15:46:04');
+(4, 11, 'You d\'ont have the right documents', 0, '2025-02-11 15:46:04'),
+(5, 13, 'nefhatli', 0, '2025-02-12 17:56:12');
 
 -- --------------------------------------------------------
 
@@ -248,7 +268,9 @@ INSERT INTO `payment` (`id`, `claim`, `amount`, `validation`, `date`) VALUES
 (15, 10, '1000', 0, '2025-02-11 15:44:00'),
 (16, 12, '500', 1, '2025-02-11 16:47:04'),
 (17, 12, '10', 0, '2025-02-11 16:47:27'),
-(18, 12, '5', 0, '2025-02-11 16:47:31');
+(18, 12, '5', 0, '2025-02-11 16:47:31'),
+(19, 12, '645', 0, '2025-02-12 12:30:07'),
+(20, 14, '1000', 0, '2025-02-12 17:56:56');
 
 -- --------------------------------------------------------
 
@@ -292,7 +314,8 @@ CREATE TABLE `region` (
 INSERT INTO `region` (`id`, `name`) VALUES
 (1, 'Alger'),
 (2, 'Blida'),
-(3, 'Medea');
+(3, 'Medea'),
+(7, 'Bejaia');
 
 -- --------------------------------------------------------
 
@@ -314,15 +337,16 @@ CREATE TABLE `user` (
 --
 
 INSERT INTO `user` (`id`, `username`, `password`, `phone`, `fullname`, `region`) VALUES
-(1, 'zynocodes', '$2b$10$4MIvpragNPncW.6UO6nCaeznNlAunQcUFhFv0PyFzJ8laokidy/FW', '0778295266', 'Zineeddine Boumrar', 3),
-(2, 'codebykhaldi', '$2b$10$yf.6JL2zSmasbEwf4bQHt.O46/9GiH0tjsxnkIyx07tD1BOlUvGW2', '0563825360', 'Abdelmoumen Khaldi', 1),
-(3, 'yassine2003', '$2b$10$E9iEjEoy48lN8uo98TH39uCdj0FKPdwmHwegq89G42vh60PyluMMu', '0643187659', 'Yassine Hakem', 2),
-(4, 'hind22', '$2b$10$ToSTeeuVIJp7URFSXzWDJeumMGAb3lNxymV.pYDtHw3tI3aSIUgua', '0756321198', 'Benkssiour Hind', 2),
-(5, 'amira22', '$2b$10$HJODWEHAyNFSLJdO7NAJOO1MajgYOdUR19mEFJjg483hi9TYXFO4G', '0543678294', 'Said Abdessameud Amira', 1),
-(6, 'Dryassine22', '$2b$10$CTsz793H7OasrTbZIBdT9e9/Syh17tj0xtNAVJE4DwhBYhF9S17.i', '0765342984', 'Dr Yassine Hakem', 2),
-(7, 'Drloukmane23', '$2b$10$haBVlYFlXA486/.NC8YK0uv2/Q4KtZNu5aAIsrFm39wA/vUZTlDeS', '0564328734', 'Dr Loukmane Nouar', 3),
-(8, 'hopitalA1', '$2b$10$eY.J3tqW/YJjuLf2l1fiBOAhkScRUcbjhrJYPJsSCbuRwjZrPo6z6', '0654382976', 'Hopital A', 1),
-(9, 'zino31', '$2b$10$sy7s.Xd8GxjedMiqDGRf9u0VnWYx.QHjpwjSVGLqdKMQLNCzEhh7q', '078532589', 'ZINE EDDINE BOUMRAR', 3);
+(1, 'zynocodes', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0778295266', 'Zineeddine Boumrar', 3),
+(2, 'codebykhaldi', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0563825360', 'Abdelmoumen Khaldi', 1),
+(3, 'yassine2003', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0643187659', 'Yassine Hakem', 2),
+(4, 'hind22', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0756321198', 'Benkssiour Hind', 2),
+(5, 'amira22', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0543678294', 'Said Abdessameud Amira', 1),
+(6, 'Dryassine22', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0765342984', 'Dr Yassine Hakem', 2),
+(7, 'Drloukmane23', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0564328734', 'Dr Loukmane Nouar', 3),
+(8, 'hopitalA1', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0654382976', 'Hopital A', 1),
+(9, 'zino31', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '078532589', 'ZINE EDDINE BOUMRAR', 3),
+(12, 'zynocodes2', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0743278164', 'zinoxy', 1);
 
 --
 -- Indexes for dumped tables
@@ -426,7 +450,6 @@ ALTER TABLE `region`
 ALTER TABLE `user`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `password` (`password`),
   ADD UNIQUE KEY `phone` (`phone`),
   ADD KEY `idx_user_region` (`region`);
 
@@ -450,7 +473,7 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `claim`
 --
 ALTER TABLE `claim`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `client`
@@ -462,31 +485,31 @@ ALTER TABLE `client`
 -- AUTO_INCREMENT for table `document`
 --
 ALTER TABLE `document`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `grade`
 --
 ALTER TABLE `grade`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `insurer`
 --
 ALTER TABLE `insurer`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `justification`
 --
 ALTER TABLE `justification`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `medicalservice`
 --
 ALTER TABLE `medicalservice`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `observation`
@@ -498,25 +521,25 @@ ALTER TABLE `observation`
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `policy`
 --
 ALTER TABLE `policy`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `region`
 --
 ALTER TABLE `region`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `user`
 --
 ALTER TABLE `user`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- Constraints for dumped tables
@@ -538,30 +561,30 @@ ALTER TABLE `admin`
 -- Constraints for table `claim`
 --
 ALTER TABLE `claim`
-  ADD CONSTRAINT `claim_ibfk_3446` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_3447` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_3448` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_3449` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `claim_ibfk_4814` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_4815` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_4816` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_4817` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `client`
 --
 ALTER TABLE `client`
-  ADD CONSTRAINT `client_ibfk_2273` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `client_ibfk_2274` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `client_ibfk_163` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `client_ibfk_164` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document`
 --
 ALTER TABLE `document`
-  ADD CONSTRAINT `fk_document_claim` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `document_ibfk_1` FOREIGN KEY (`claim`) REFERENCES `claim` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `insurer`
 --
 ALTER TABLE `insurer`
-  ADD CONSTRAINT `insurer_ibfk_43` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `insurer_ibfk_44` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `insurer_ibfk_331` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `insurer_ibfk_332` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `justification`
