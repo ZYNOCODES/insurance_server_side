@@ -41,8 +41,10 @@ const createNewPolicy = asyncErrorHandler(async (req, res, next) => {
 //Update a Policy
 const updatePolicy = asyncErrorHandler(async (req, res, next) => {
     const { policy, name, limit, co_pay, exclusions } = req.body;
-    if (!name || !policy || !limit || !co_pay || !exclusions) {
-        return next(new CustomError('All fields are required', 400));
+    console.log(req.body);
+    
+    if (!policy || (!name && !limit && !co_pay && !exclusions)) {
+        return next(new CustomError('One of the fields is required', 400));
     }
     //check if Policy exists
     const existingPolicy = await Policy.findByPk(policy);

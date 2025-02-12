@@ -35,8 +35,8 @@ const createNewGrade = asyncErrorHandler(async (req, res, next) => {
 //Update a Grade
 const updateGrade = asyncErrorHandler(async (req, res, next) => {
     const { grade, name, exclusions } = req.body;
-    if (!name || !grade || !exclusions) {
-        return next(new CustomError('All fields are required', 400));
+    if (!grade || (!name && !exclusions)) {
+        return next(new CustomError('One of the fields is required', 400));
     }
     //check if Grade exists
     const existingGrade = await Grade.findByPk(grade);

@@ -180,6 +180,7 @@ const AdminInsurerLogin = asyncErrorHandler(async (req, res, next) => {
             fullName: user.fullname,
             region: user.regionAssociation.name,
             grade: existingInsurer ? existingInsurer.gradeAssociation.name : null,
+            role: existingInsurer ? 'Insurer' : 'Admin',
         }
     });
 });
@@ -339,6 +340,10 @@ const ClientRegister = asyncErrorHandler(async (req, res, next) => {
     if (PolicyExists.name === 'Family Plan' && married === false) {
         return next(new CustomError('You must be married to subscribe to the Family Plan', 400));
     }
+    //check if its a strong password
+    if (!validator.isStrongPassword(password)) {
+        return next(new CustomError('Password must be at least 8 characters long, contain at least 1 lowercase letter, 1 uppercase letter, 1 number and 1 symbol', 400));
+    }
     // Hash password
     const hashedPassword = await hashPassword(password);
 
@@ -425,6 +430,10 @@ const InsurerRegister = asyncErrorHandler(async (req, res, next) => {
     if (!gradeExists) {
         return next(new CustomError('Invalid grade', 400));
     }
+    //check if its a strong password
+    if (!validator.isStrongPassword(password)) {
+        return next(new CustomError('Password must be at least 8 characters long, contain at least 1 lowercase letter, 1 uppercase letter, 1 number and 1 symbol', 400));
+    }
     // Hash password
     const hashedPassword = await hashPassword(password);
 
@@ -500,6 +509,10 @@ const AdminRegister = asyncErrorHandler(async (req, res, next) => {
     // check if the region exists
     if (!regionExists) {
         return next(new CustomError('Invalid region', 400));
+    }
+    //check if its a strong password
+    if (!validator.isStrongPassword(password)) {
+        return next(new CustomError('Password must be at least 8 characters long, contain at least 1 lowercase letter, 1 uppercase letter, 1 number and 1 symbol', 400));
     }
     // Hash password
     const hashedPassword = await hashPassword(password);
@@ -581,6 +594,10 @@ const MedicalServiceRegister = asyncErrorHandler(async (req, res, next) => {
     // check if the region exists
     if (!regionExists) {
         return next(new CustomError('Invalid region', 400));
+    }
+    //check if its a strong password
+    if (!validator.isStrongPassword(password)) {
+        return next(new CustomError('Password must be at least 8 characters long, contain at least 1 lowercase letter, 1 uppercase letter, 1 number and 1 symbol', 400));
     }
     // Hash password
     const hashedPassword = await hashPassword(password);

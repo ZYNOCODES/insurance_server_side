@@ -86,7 +86,7 @@ const updateMedicalService = asyncErrorHandler(async (req, res, next) => {
             if (!['doctor', 'pharmacy', 'organisation'].includes(type)) {
                 return next(new CustomError('Invalid type', 400));
             }
-            existingMedicalService.grade = grade;
+            existingMedicalService.type = type;
         }
         if (location) existingMedicalService.location = location;
 
@@ -101,6 +101,8 @@ const updateMedicalService = asyncErrorHandler(async (req, res, next) => {
 
     } catch (error) {
         await transaction.rollback();
+        console.log(error);
+        
         next(new CustomError('An error occurred while updating the MedicalService', 500));
     }
 });

@@ -22,7 +22,7 @@ router.patch('/update/:id', limiter, checkAuthrozation([process.env.ADMIN_TYPE])
 //Delete a grade
 router.delete('/delete/:id', limiter, checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, deleteGrade);
 //Get all grades
-router.get('/all/:id', limiter, checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, getAllGrades);
+router.get('/all/:id', checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, getAllGrades);
 
 
 module.exports = router;
