@@ -18,6 +18,8 @@ const RegionRoutes = require('./route/RegionRoutes.js');
 const MedicalServiceRoutes = require('./route/MedicalServiceRoutes.js');
 const PaymentRoutes = require('./route/PaymentRoutes.js');
 const JustificationRoutes = require('./route/JustificationRoutes.js');
+const InsurerRoutes = require('./route/InsurerRoutes.js');
+
 
 //http server
 const http = require('http');
@@ -47,6 +49,7 @@ app.use('/api/region', RegionRoutes);
 app.use('/api/medicalservice', MedicalServiceRoutes);
 app.use('/api/payment', PaymentRoutes);
 app.use('/api/justification', JustificationRoutes);
+app.use('/api/insurer', InsurerRoutes);
 
 //error handling
 app.use(ErrorHandler);

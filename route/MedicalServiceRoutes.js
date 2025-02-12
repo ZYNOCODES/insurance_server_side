@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const {
-    getAllMedicalService
+    updateMedicalService,
+    deleteMedicalService,
+    getAllMedicalServices,
 } = require('../controller/MedicalServiceController.js');
 const limiter = require('../middleware/RateLimiting.js');
 const checkAuthentification = require('../middleware/RequireAuth.js');
@@ -14,7 +16,12 @@ router.use(checkAuthentification);
 
 //PUBLIC ROUTES
 //Get all Medical Services
-router.get('/all', limiter, getAllMedicalService);
+router.get('/all', limiter, getAllMedicalServices);
 
+//ADMIN ROUTES
+//update medical service
+router.patch('/update/:id', limiter, checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, updateMedicalService);
+//delete medical service
+router.delete('/delete/:id', limiter, checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, deleteMedicalService);
 
 module.exports = router;

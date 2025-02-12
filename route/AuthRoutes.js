@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
     ClientLogin,
-    InsurerLogin,
+    AdminInsurerLogin,
     AdminLogin,
     MedicalServiceLogin,
     ClientRegister,
@@ -17,7 +17,7 @@ const checkAuthrozation = require('../middleware/Authorization.js');
 
 //ROUTE
 router.post('/client/login', limiter, ClientLogin);
-router.post('/insurer/login', limiter, InsurerLogin);
+router.post('/admin_insurer/login', limiter, AdminInsurerLogin);
 router.post('/admin/login', limiter, AdminLogin);
 router.post('/medical-service/login', limiter, MedicalServiceLogin);
 router.post('/client/register', limiter, ClientRegister);

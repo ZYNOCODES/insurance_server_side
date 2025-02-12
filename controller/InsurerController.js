@@ -2,43 +2,43 @@ const sequelize = require('../config/Database.js');
 const validator = require('validator');
 const CustomError = require('../util/CustomError.js');
 const asyncErrorHandler = require('../util/asyncErrorHandler.js');
-const MedicalService = require('../model/MedicalServiceModel.js');
+const Insurer = require('../model/InsurerModel.js');
 const User = require('../model/UserModel.js');
 const {
     hashPassword
 } = require('../util/bcrypt.js');
 const Region = require('../model/RegionModel.js');
+const Grade = require('../model/GradeModel.js');
 const Claim = require('../model/ClaimModel.js');
 
-// Update an MedicalService
-const updateMedicalService = asyncErrorHandler(async (req, res, next) => {
+// Update an Insurer
+const updateInsurer = asyncErrorHandler(async (req, res, next) => {
     const {
-        medicalService,
+        insurer,
         username,
         password,
         phone,
         fullName,
         region,
-        type,
-        location,
+        grade,
     } = req.body;
 
-    if (!medicalService || (!username && !password && !phone && !fullName && !region && !type && !location)) {
+    if (!insurer || (!username && !password && !phone && !fullName && !region && !grade)) {
         return next(new CustomError('One of the fields is required', 400));
     }
 
     const transaction = await sequelize.transaction();
 
     try {
-        // Check if MedicalService exists
-        const existingMedicalService = await MedicalService.findByPk(medicalService, { transaction });
-        if (!existingMedicalService) {
+        // Check if Insurer exists
+        const existingInsurer = await Insurer.findByPk(insurer, { transaction });
+        if (!existingInsurer) {
             await transaction.rollback();
-            return next(new CustomError('Medical service not found', 404));
+            return next(new CustomError('Insurer not found', 404));
         }
 
         // Get the linked user
-        const linkedUser = await User.findByPk(existingMedicalService.user, { transaction });
+        const linkedUser = await User.findByPk(existingInsurer.user, { transaction });
         if (!linkedUser) {
             await transaction.rollback();
             return next(new CustomError('Linked user not found', 404));
@@ -81,32 +81,32 @@ const updateMedicalService = asyncErrorHandler(async (req, res, next) => {
 
         await linkedUser.save({ transaction });
 
-        // Update MedicalService details
-        if (type) {
-            if (!['doctor', 'pharmacy', 'organisation'].includes(type)) {
-                return next(new CustomError('Invalid type', 400));
+        // Update Insurer details
+        if (grade) {
+            const existingGrade = await Grade.findByPk(grade);
+            if(!existingGrade){
+                return next(new CustomError('Invalid grade', 400));
             }
-            existingMedicalService.grade = grade;
+            existingInsurer.grade = grade;
         }
-        if (location) existingMedicalService.location = location;
 
-        await existingMedicalService.save({ transaction });
+        await existingInsurer.save({ transaction });
 
         await transaction.commit();
 
         res.status(200).json({
             status: 'success',
-            message: 'Medical service updated successfully',
+            message: 'Insurer updated successfully',
         });
 
     } catch (error) {
         await transaction.rollback();
-        next(new CustomError('An error occurred while updating the MedicalService', 500));
+        next(new CustomError('An error occurred while updating the insurer', 500));
     }
 });
-//Get all MedicalServices
-const getAllMedicalServices = asyncErrorHandler(async (req, res, next) => {
-    const MedicalServices = await MedicalService.findAll({
+//Get all Insurers
+const getAllInsurers = asyncErrorHandler(async (req, res, next) => {
+    const Insurers = await Insurer.findAll({
         include: [
             {
                 model: User,
@@ -117,54 +117,59 @@ const getAllMedicalServices = asyncErrorHandler(async (req, res, next) => {
                     as: 'regionAssociation',
                     attributes: ['name']
                 }
+            },
+            {
+                model: Grade,
+                as: 'gradeAssociation',
+                attributes: ['name'],
             }
         ],
     });
-    if (!MedicalServices || MedicalServices.length <= 0) {
-        return next(new CustomError('No MedicalServices found', 404));
+    if (!Insurers || Insurers.length <= 0) {
+        return next(new CustomError('No Insurers found', 404));
     }
-    res.status(200).json(MedicalServices);
+    res.status(200).json(Insurers);
 });
-//Delete a MedicalService
-const deleteMedicalService = asyncErrorHandler(async (req, res, next) => {
-    const { medicalService } = req.body;
+//Delete a Insurer
+const deleteInsurer = asyncErrorHandler(async (req, res, next) => {
+    const { insurer } = req.body;
 
-    if (!medicalService) {
-        return next(new CustomError('Medical service ID is required', 400));
+    if (!insurer) {
+        return next(new CustomError('Insurer ID is required', 400));
     }
 
     const transaction = await sequelize.transaction();
 
     try {
-        // Check if MedicalService exists
-        const existingMedicalService = await MedicalService.findByPk(medicalService, { transaction });
-        if (!existingMedicalService) {
+        // Check if Insurer exists
+        const existingInsurer = await Insurer.findByPk(insurer, { transaction });
+        if (!existingInsurer) {
             await transaction.rollback();
-            return next(new CustomError('Medical service not found', 404));
+            return next(new CustomError('Insurer not found', 404));
         }
 
-        // Check if no claim is linked to this MedicalService
+        // Check if no claim is linked to this insurer
         const linkedClaims = await Claim.count({
             where: {
-                medicalservice: medicalService
+                insurer: insurer
             },
             transaction
         });
 
         if (linkedClaims > 0) {
             await transaction.rollback();
-            return next(new CustomError('Cannot delete Medical service with linked claims', 400));
+            return next(new CustomError('Cannot delete insurer with linked claims', 400));
         }
 
         // Get the linked user
-        const linkedUser = await User.findByPk(existingMedicalService.user, { transaction });
+        const linkedUser = await User.findByPk(existingInsurer.user, { transaction });
         if (!linkedUser) {
             await transaction.rollback();
             return next(new CustomError('Linked user not found', 404));
         }
 
-        // Delete MedicalService
-        await existingMedicalService.destroy({ transaction });
+        // Delete Insurer
+        await existingInsurer.destroy({ transaction });
 
         // Delete linked User
         await linkedUser.destroy({ transaction });
@@ -173,11 +178,11 @@ const deleteMedicalService = asyncErrorHandler(async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            message: 'Medical service deleted successfully',
+            message: 'Insurer deleted successfully',
         });
     } catch (error) {
         await transaction.rollback();
-        next(new CustomError('An error occurred while deleting the MedicalService', 500));
+        next(new CustomError('An error occurred while deleting the insurer', 500));
     }
 });
 
@@ -212,7 +217,7 @@ const _findUserByPhone = async (identifier) => {
 };
 
 module.exports = {
-    updateMedicalService,
-    deleteMedicalService,
-    getAllMedicalServices,
+    updateInsurer,
+    deleteInsurer,
+    getAllInsurers,
 };

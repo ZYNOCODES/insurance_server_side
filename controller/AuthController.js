@@ -115,7 +115,7 @@ const ClientLogin = asyncErrorHandler(async (req, res, next) => {
 });
 
 // Insurer login
-const InsurerLogin = asyncErrorHandler(async (req, res, next) => {
+const AdminInsurerLogin = asyncErrorHandler(async (req, res, next) => {
     const {
         identifier,
         password
@@ -140,26 +140,34 @@ const InsurerLogin = asyncErrorHandler(async (req, res, next) => {
     if (!isMatch) {
         return next(new CustomError('Invalid credentials', 401));
     }
-    //get infos from insurer
-    const existingInsurer = await Insurer.findOne({
-        where: {
-            user: user.id
-        },
-        include: [
-            {
-                model: Grade,
-                as: 'gradeAssociation',
-                attributes: ['name'],
+    //check if user is admin or insurer
+    const [existingAdmin, existingInsurer] = await Promise.all([
+        Admin.findOne({
+            where: {
+                user: user.id
             }
-        ]
-    });
-    if (!existingInsurer) {
+        }),
+        Insurer.findOne({
+            where: {
+                user: user.id
+            },
+            include: [
+                {
+                    model: Grade,
+                    as: 'gradeAssociation',
+                    attributes: ['name'],
+                }
+            ]
+        })
+    ]);
+    
+    if (!existingInsurer && !existingAdmin) {
         return next(new CustomError('Invalid credentials', 401));
     }
     // Create and send token
     const token = createToken(
-        existingInsurer.id,
-        process.env.INSURER_TYPE,
+        existingInsurer ? existingInsurer.id : existingAdmin.id,
+        existingInsurer ? process.env.INSURER_TYPE : process.env.ADMIN_TYPE,
         user.region
     );
 
@@ -171,7 +179,7 @@ const InsurerLogin = asyncErrorHandler(async (req, res, next) => {
             phone: user.phone,
             fullName: user.fullname,
             region: user.regionAssociation.name,
-            grade: existingInsurer.gradeAssociation.name,
+            grade: existingInsurer ? existingInsurer.gradeAssociation.name : null,
         }
     });
 });
@@ -622,7 +630,7 @@ const MedicalServiceRegister = asyncErrorHandler(async (req, res, next) => {
 
 module.exports = {
     ClientLogin,
-    InsurerLogin,
+    AdminInsurerLogin,
     AdminLogin,
     MedicalServiceLogin,
     ClientRegister,
