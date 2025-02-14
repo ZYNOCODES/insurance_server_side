@@ -17,7 +17,7 @@ router.use(checkAuthentification);
 
 //PUBLIC ROUTES
 //Get all payments by claim
-router.get('/all/:id', limiter, checkAuthrozation([process.env.CLIENT_TYPE, process.env.INSURER_TYPE]), GetAllPaymentsByClaim);
+router.get('/all/:id', checkAuthrozation([process.env.CLIENT_TYPE, process.env.INSURER_TYPE]), GetAllPaymentsByClaim);
 
 //INSURER ROUTES
 //Create a new payment to claim by insurer

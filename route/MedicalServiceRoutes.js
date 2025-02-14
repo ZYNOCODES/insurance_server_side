@@ -16,7 +16,7 @@ router.use(checkAuthentification);
 
 //PUBLIC ROUTES
 //Get all Medical Services
-router.get('/all', limiter, getAllMedicalServices);
+router.get('/all', getAllMedicalServices);
 
 //ADMIN ROUTES
 //update medical service

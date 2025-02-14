@@ -14,7 +14,7 @@ const checkAdminOwnership = require('../middleware/CheckAdminOwnership.js');
 
 //PUBLIC ROUTES
 //Get all Policys
-router.get('/all', limiter, getAllPolicys);
+router.get('/all', getAllPolicys);
 
 //secure routes below
 router.use(checkAuthentification);

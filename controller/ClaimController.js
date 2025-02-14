@@ -13,6 +13,7 @@ const Payment = require('../model/PaymentModel.js');
 const Region = require('../model/RegionModel.js');
 const Policy = require('../model/PolicyModel.js');
 const Document = require('../model/DocumentModel.js');
+const Accusation = require('../model/AccusationModel.js');
 
 // Create new claim
 const createNewClaim = asyncErrorHandler(async (req, res, next) => {
@@ -251,6 +252,18 @@ const getAllClaimsByClient = asyncErrorHandler(async (req, res, next) => {
                 model: Region,
                 as: 'regionAssociation',
                 attributes: ['name'],
+            },
+            {
+                model: Client,
+                as: 'clientAssociation',
+                attributes: ['policy'],
+                include: [
+                    {
+                        model: Policy,
+                        as: 'policyAssociation',
+                        attributes: ['co_pay'],
+                    },
+                ],
             }
         ],
     });
@@ -259,7 +272,7 @@ const getAllClaimsByClient = asyncErrorHandler(async (req, res, next) => {
         return next(new CustomError('No claims found', 404));
     }
     // Filter claims with status "paid"
-    const paidClaims = claims.filter((claim) => claim.status === 'paid');
+    const paidClaims = claims.filter((claim) => claim.status == 'paid' || claim.status == 'approved');
     
     // Fetch payments for all "paid" claims in a single query
     const payments = await Payment.findAll({
@@ -267,7 +280,7 @@ const getAllClaimsByClient = asyncErrorHandler(async (req, res, next) => {
             claim: paidClaims.map((claim) => claim.id),
         },
     });
-
+    
     // Map payments to their respective claims
     const paymentMap = payments.reduce((map, payment) => {
         if (!map[payment.claim]) {
@@ -282,8 +295,10 @@ const getAllClaimsByClient = asyncErrorHandler(async (req, res, next) => {
         if (claim.status === 'paid') {
             claim.dataValues.reimbursement = paymentMap[claim.id] || 0;
         }
+        claim.dataValues.payments = payments.filter((payment) => payment.claim == claim.id);
         return claim;
     });    
+    
     //send response
     res.status(200).json(updatedClaims);
 });
@@ -328,6 +343,18 @@ const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) =>
                 model: Region,
                 as: 'regionAssociation',
                 attributes: ['name'],
+            },
+            {
+                model: Client,
+                as: 'clientAssociation',
+                attributes: ['policy'],
+                include: [
+                    {
+                        model: Policy,
+                        as: 'policyAssociation',
+                        attributes: ['co_pay'],
+                    },
+                ],
             }
         ],
     });
@@ -361,6 +388,13 @@ const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) =>
             claim: rejectedClaims.map((claim) => claim.id),
         },
     });
+
+    //Fetch accusation for all justifications in a single query
+    const accusations = await Accusation.findAll({
+        where: {
+            justification: justifications.map((justification) => justification.id),
+        },
+    });
     
     // Add reimbursement amount to paid claims
     const updatedClaims = claims.map((claim) => {
@@ -369,7 +403,9 @@ const getAllArchivedClaimsByClient = asyncErrorHandler(async (req, res, next) =>
         }
         if (claim.status === 'rejected') {
             claim.dataValues.justification = justifications.find((justification) => justification.claim === claim.id);
+            claim.dataValues.accusation = accusations.find((accusation) => accusation.justification === claim.dataValues.justification.id);
         }
+        claim.dataValues.payments = payments.filter((payment) => payment.claim === claim.id);
         return claim;
     });
     
@@ -1025,6 +1061,23 @@ const confirmPaymentByClient = asyncErrorHandler(async (req, res, next) => {
                 claim,
                 validation: false,
             },
+            include: {
+                model: Claim,
+                as: 'claimAssociation',
+                attributes: ['claim_amount', 'client'],
+                include: {
+                    model: Client,
+                    as: 'clientAssociation',
+                    attributes: ['policy'],
+                    include: [
+                        {
+                            model: Policy,
+                            as: 'policyAssociation',
+                            attributes: ['co_pay'],
+                        }
+                    ],
+                },
+            },
             transaction
         });
 
@@ -1038,25 +1091,30 @@ const confirmPaymentByClient = asyncErrorHandler(async (req, res, next) => {
         await paymentToConfirm.save({ transaction });
 
         // Check if all payments for the claim are confirmed
-        const unconfirmedPayments = await Payment.count({
+        const existingPayments = await Payment.findAll({
             where: {
                 claim,
-                validation: false,
             },
             transaction
         });
+        //total payments
+        const totalPayments = existingPayments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+        const amountNeeded = (Number(paymentToConfirm.claimAssociation.claim_amount) * Number(paymentToConfirm.claimAssociation?.clientAssociation?.policyAssociation?.co_pay))/100
 
         // If all payments are confirmed, close the claim
-        if (unconfirmedPayments == 0) {
-            const claimToClose = await Claim.findByPk(claim, { transaction });
-
-            if (!claimToClose) {
-                await transaction.rollback();
-                return next(new CustomError('Claim not found', 404));
+        if (amountNeeded == totalPayments) {
+            const validatedPayments = existingPayments.filter((payment) => payment.validation == false)
+            if (validatedPayments == 0) {
+                const claimToClose = await Claim.findByPk(claim, { transaction });
+    
+                if (!claimToClose) {
+                    await transaction.rollback();
+                    return next(new CustomError('Claim not found', 404));
+                }
+                claimToClose.status = 'paid'
+                claimToClose.closed = true;
+                await claimToClose.save({ transaction });
             }
-
-            claimToClose.closed = true;
-            await claimToClose.save({ transaction });
         }
 
         // Commit transaction

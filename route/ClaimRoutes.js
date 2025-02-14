@@ -40,7 +40,7 @@ router.get('/client/all/:id', checkAuthrozation([process.env.CLIENT_TYPE]), chec
 //Get all archived claims by client
 router.get('/client/archived/:id', checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, getAllArchivedClaimsByClient);
 //Confirm payment by client
-router.post('/client/confirm/:id', limiter, checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, confirmPaymentByClient);
+router.patch('/client/confirm/:id', limiter, checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, confirmPaymentByClient);
 //Get client claim statistics
 router.get('/client/statistics/:id', checkAuthrozation([process.env.CLIENT_TYPE]), checkClientOwnership, getClientClaimStatistics);
 

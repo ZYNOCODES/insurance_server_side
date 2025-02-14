@@ -16,7 +16,7 @@ router.use(checkAuthentification);
 
 //ADMIN ROUTES
 //Get all insurers
-router.get('/all/:id', limiter, checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, getAllInsurers);
+router.get('/all/:id', checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, getAllInsurers);
 //update insurer
 router.patch('/update/:id', limiter, checkAuthrozation([process.env.ADMIN_TYPE]), checkAdminOwnership, updateInsurer);
 //delete insurer

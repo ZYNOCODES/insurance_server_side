@@ -14,7 +14,7 @@ const checkAdminOwnership = require('../middleware/CheckAdminOwnership.js');
 
 //PUBLIC ROUTES
 //Get all regions
-router.get('/all', limiter, getAllRegions);
+router.get('/all', getAllRegions);
 
 //secure routes below
 router.use(checkAuthentification);

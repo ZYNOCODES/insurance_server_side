@@ -19,7 +19,7 @@ const MedicalServiceRoutes = require('./route/MedicalServiceRoutes.js');
 const PaymentRoutes = require('./route/PaymentRoutes.js');
 const JustificationRoutes = require('./route/JustificationRoutes.js');
 const InsurerRoutes = require('./route/InsurerRoutes.js');
-
+const AccusationRoutes = require('./route/AccusationRoutes.js');
 
 //http server
 const http = require('http');
@@ -50,6 +50,7 @@ app.use('/api/medicalservice', MedicalServiceRoutes);
 app.use('/api/payment', PaymentRoutes);
 app.use('/api/justification', JustificationRoutes);
 app.use('/api/insurer', InsurerRoutes);
+app.use('/api/accusation', AccusationRoutes);
 
 //error handling
 app.use(ErrorHandler);
