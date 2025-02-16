@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Feb 12, 2025 at 07:02 PM
+-- Generation Time: Feb 16, 2025 at 01:48 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -40,7 +40,9 @@ CREATE TABLE `accusation` (
 --
 
 INSERT INTO `accusation` (`id`, `justification`, `description`, `status`, `date`) VALUES
-(1, 4, 'sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas v v sdas sdas', 'pending', '2025-02-11 17:43:32');
+(1, 4, 'sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas sdas v v sdas sdas', 'pending', '2025-02-11 17:43:32'),
+(4, 5, 'ifhxkgsitxxkglhxlhxlxhcjl', 'pending', '2025-02-14 23:44:19'),
+(5, 7, '3lchhhhhhh', 'pending', '2025-02-16 00:34:17');
 
 -- --------------------------------------------------------
 
@@ -84,13 +86,17 @@ CREATE TABLE `claim` (
 
 INSERT INTO `claim` (`id`, `client`, `medicalservice`, `insurer`, `status`, `closed`, `claim_amount`, `region`, `date`) VALUES
 (8, 4, 2, NULL, 'pending', 0, '20000', 3, '2025-02-11 15:36:54'),
-(9, 1, 1, 2, 'paid', 0, '10000', 2, '2025-02-11 15:38:47'),
-(10, 1, 1, 2, 'paid', 0, '5000', 2, '2025-02-11 15:40:09'),
+(9, 1, 1, 2, 'paid', 1, '10000', 2, '2025-02-11 15:38:47'),
+(10, 1, 1, 2, 'paid', 1, '5000', 2, '2025-02-11 15:40:09'),
 (11, 1, 1, 2, 'rejected', 1, '7000', 2, '2025-02-11 15:45:27'),
-(12, 1, 1, 2, 'paid', 0, '5800', 2, '2025-02-11 16:45:48'),
+(12, 1, 1, 2, 'paid', 1, '5800', 2, '2025-02-11 16:45:48'),
 (13, 1, 1, 2, 'rejected', 1, '9000', 2, '2025-02-11 18:26:49'),
 (14, 1, 1, 2, 'approved', 0, '8000', 2, '2025-02-11 19:15:12'),
-(15, 1, 1, NULL, 'pending', 0, '5000', 2, '2025-02-11 19:17:58');
+(15, 1, 1, NULL, 'pending', 0, '5000', 2, '2025-02-11 19:17:58'),
+(16, 1, 2, 4, 'paid', 1, '10000', 3, '2025-02-14 23:12:53'),
+(17, 1, 2, 4, 'rejected', 1, '10000', 3, '2025-02-14 23:13:24'),
+(18, 1, 1, NULL, 'pending', 0, '50000', 2, '2025-02-16 00:25:33'),
+(19, 4, 1, 2, 'rejected', 1, '10000', 2, '2025-02-16 00:32:01');
 
 -- --------------------------------------------------------
 
@@ -142,7 +148,13 @@ INSERT INTO `document` (`id`, `claim`, `name`, `date`) VALUES
 (5, 14, '1739301305375.jpg', '2025-02-11 19:15:12'),
 (6, 14, '1739301307325.jpg', '2025-02-11 19:15:12'),
 (7, 14, '1739301309923.jpg', '2025-02-11 19:15:12'),
-(8, 15, '1739301478279.jpg', '2025-02-11 19:17:58');
+(8, 15, '1739301478279.jpg', '2025-02-11 19:17:58'),
+(9, 16, '1739574772327.jpg', '2025-02-14 23:12:53'),
+(10, 16, '1739574772841.jpg', '2025-02-14 23:12:53'),
+(11, 17, '1739574803672.jpg', '2025-02-14 23:13:24'),
+(12, 17, '1739574804220.jpg', '2025-02-14 23:13:24'),
+(13, 18, '1739665531867.jpg', '2025-02-16 00:25:33'),
+(14, 19, '1739665921472.png', '2025-02-16 00:32:01');
 
 -- --------------------------------------------------------
 
@@ -205,8 +217,10 @@ CREATE TABLE `justification` (
 --
 
 INSERT INTO `justification` (`id`, `claim`, `description`, `accused`, `date`) VALUES
-(4, 11, 'You d\'ont have the right documents', 0, '2025-02-11 15:46:04'),
-(5, 13, 'nefhatli', 0, '2025-02-12 17:56:12');
+(4, 11, 'You d\'ont have the right documents', 1, '2025-02-11 15:46:04'),
+(5, 13, 'nefhatli', 1, '2025-02-12 17:56:12'),
+(6, 17, 'Are you sure you want to reject this claim Are you sure you want to reject this claim you sure you want to reject this claim you sure you want to reject this claim.', 0, '2025-02-14 23:16:24'),
+(7, 19, 'no merci', 1, '2025-02-16 00:33:53');
 
 -- --------------------------------------------------------
 
@@ -264,13 +278,17 @@ CREATE TABLE `payment` (
 --
 
 INSERT INTO `payment` (`id`, `claim`, `amount`, `validation`, `date`) VALUES
-(14, 9, '2000', 0, '2025-02-11 15:41:23'),
-(15, 10, '1000', 0, '2025-02-11 15:44:00'),
+(14, 9, '2000', 1, '2025-02-11 15:41:23'),
+(15, 10, '1000', 1, '2025-02-11 15:44:00'),
 (16, 12, '500', 1, '2025-02-11 16:47:04'),
-(17, 12, '10', 0, '2025-02-11 16:47:27'),
-(18, 12, '5', 0, '2025-02-11 16:47:31'),
-(19, 12, '645', 0, '2025-02-12 12:30:07'),
-(20, 14, '1000', 0, '2025-02-12 17:56:56');
+(17, 12, '10', 1, '2025-02-11 16:47:27'),
+(18, 12, '5', 1, '2025-02-11 16:47:31'),
+(19, 12, '645', 1, '2025-02-12 12:30:07'),
+(20, 14, '1000', 1, '2025-02-12 17:56:56'),
+(21, 16, '1000', 1, '2025-02-14 23:21:00'),
+(22, 16, '250', 1, '2025-02-14 23:42:00'),
+(23, 16, '250', 1, '2025-02-14 23:42:06'),
+(24, 16, '500', 1, '2025-02-14 23:42:26');
 
 -- --------------------------------------------------------
 
@@ -346,7 +364,7 @@ INSERT INTO `user` (`id`, `username`, `password`, `phone`, `fullname`, `region`)
 (7, 'Drloukmane23', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0564328734', 'Dr Loukmane Nouar', 3),
 (8, 'hopitalA1', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0654382976', 'Hopital A', 1),
 (9, 'zino31', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '078532589', 'ZINE EDDINE BOUMRAR', 3),
-(12, 'zynocodes2', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0743278164', 'zinoxy', 1);
+(12, 'zynocodes2', '$2b$10$g1R/LP8FrRmbXSVrRzD9k.qdsid3uWrmGTeqzRuMB2bG3TCfEIcTe', '0743278164', 'zinoxy', 3);
 
 --
 -- Indexes for dumped tables
@@ -461,7 +479,7 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT for table `accusation`
 --
 ALTER TABLE `accusation`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `admin`
@@ -473,7 +491,7 @@ ALTER TABLE `admin`
 -- AUTO_INCREMENT for table `claim`
 --
 ALTER TABLE `claim`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT for table `client`
@@ -485,7 +503,7 @@ ALTER TABLE `client`
 -- AUTO_INCREMENT for table `document`
 --
 ALTER TABLE `document`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `grade`
@@ -503,7 +521,7 @@ ALTER TABLE `insurer`
 -- AUTO_INCREMENT for table `justification`
 --
 ALTER TABLE `justification`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `medicalservice`
@@ -521,7 +539,7 @@ ALTER TABLE `observation`
 -- AUTO_INCREMENT for table `payment`
 --
 ALTER TABLE `payment`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `policy`
@@ -561,17 +579,17 @@ ALTER TABLE `admin`
 -- Constraints for table `claim`
 --
 ALTER TABLE `claim`
-  ADD CONSTRAINT `claim_ibfk_4814` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_4815` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_4816` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  ADD CONSTRAINT `claim_ibfk_4817` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `claim_ibfk_5669` FOREIGN KEY (`client`) REFERENCES `client` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_5670` FOREIGN KEY (`medicalservice`) REFERENCES `medicalservice` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_5671` FOREIGN KEY (`insurer`) REFERENCES `insurer` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `claim_ibfk_5672` FOREIGN KEY (`region`) REFERENCES `region` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `client`
 --
 ALTER TABLE `client`
-  ADD CONSTRAINT `client_ibfk_163` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `client_ibfk_164` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT `client_ibfk_137` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `client_ibfk_138` FOREIGN KEY (`policy`) REFERENCES `policy` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `document`
@@ -583,8 +601,8 @@ ALTER TABLE `document`
 -- Constraints for table `insurer`
 --
 ALTER TABLE `insurer`
-  ADD CONSTRAINT `insurer_ibfk_331` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
-  ADD CONSTRAINT `insurer_ibfk_332` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
+  ADD CONSTRAINT `insurer_ibfk_317` FOREIGN KEY (`user`) REFERENCES `user` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE,
+  ADD CONSTRAINT `insurer_ibfk_318` FOREIGN KEY (`grade`) REFERENCES `grade` (`id`) ON DELETE NO ACTION ON UPDATE CASCADE;
 
 --
 -- Constraints for table `justification`
